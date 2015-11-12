@@ -1,0 +1,44 @@
+#!/usr/bin/python3
+
+import os
+import sys
+
+from swh.loader.debian.listers.snapshot import SnapshotDebianOrg
+from swh.loader.debian.loader import process_source_packages, try_flush_partial
+from swh.storage.storage import Storage
+
+s = SnapshotDebianOrg(connstr='service=snapshot',
+                      basedir=os.path.expanduser('~/tmp/snapshot.d.o'))
+
+source_package_dir = sys.argv[1]
+package_names = sys.argv[2:]
+
+pkgs = s.copy_package_files(package_names, source_package_dir)
+sorted_pkgs = sorted((p
+                      for p in pkgs.values()
+                      if os.path.exists(p['dsc'])),
+                     key=lambda p: (p['name'], p['version']))
+
+storage = Storage('dbname=softwareheritage-dev',
+                  '/tmp/swh-loader-debian/objects')
+
+partial = {}
+for partial in process_source_packages(sorted_pkgs):
+    print(
+        partial['packages'][-1]['version'],
+        len(partial['objects']['directory']),
+        '(%s)' % len(partial['objects']['directory_seen']),
+        len(partial['objects']['content']),
+        '(%s)' % len(partial['objects']['content_seen']),
+    )
+
+    try_flush_partial(storage, partial, content_packet_size=10000,
+                      content_packet_length=1024 * 1024 * 1024,
+                      content_max_length_one=100 * 1024 * 1024,
+                      directory_packet_size=25000)
+
+if partial:
+    try_flush_partial(storage, partial, content_packet_size=10000,
+                      content_packet_length=1024 * 1024 * 1024,
+                      content_max_length_one=100 * 1024 * 1024,
+                      directory_packet_size=25000, force=True)
