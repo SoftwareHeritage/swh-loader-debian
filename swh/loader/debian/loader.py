@@ -160,7 +160,7 @@ def get_package_metadata(dsc_path, extracted_path, log=None):
             changelog.seek(0)
             parsed_changelog = Changelog(changelog, encoding='iso-8859-15')
 
-    ret['history'] = [(block.package, block.version)
+    ret['history'] = [(block.package, str(block.version))
                       for block in parsed_changelog]
 
     ret.update(converters.uid_to_person(parsed_changelog.author, 'author'))
