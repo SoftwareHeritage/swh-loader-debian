@@ -6,9 +6,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
+from collections import defaultdict
 import os
 import shutil
 
+from deb822 import Dsc
 from debian.debian_support import Version
 import psycopg2
 
@@ -84,6 +86,25 @@ class SnapshotDebianOrg:
 
         return res
 
+    def list_files_by_name(self, files):
+        """List the files by name"""
+        files_query = """
+        select distinct name, hash
+        from file
+        where name in %s
+        """
+
+        ret = defaultdict(list)
+        if not files:
+            return ret
+
+        with self.db.cursor() as cur:
+            cur.execute(files_query, (tuple(files),))
+            for name, hash in cur:
+                ret[name].append(hash)
+
+        return ret
+
     def copy_files_to_dirs(self, files, pool):
         """Copy the files from the snapshot storage to the directory
            `dirname`, via `pool`.
@@ -123,7 +144,7 @@ class SnapshotDebianOrg:
             if not os.path.exists(dst):
                 os.link(src1, dst)
 
-    def copy_package_files(self, packages, basedir):
+    def copy_package_files(self, packages, basedir, log=None):
         """Copy all the files for the packages `packages` in `basedir`.
 
            Step 1: create a pool as basedir/.pool
@@ -132,6 +153,7 @@ class SnapshotDebianOrg:
            Step 3: copy all the files for each package version
                    to basedir/package_version/ using copy_files_to_dirs (and
                    the previously created pool)
+           Step 4: parse all the dsc files and retrieve the remaining files
 
            Args:
                - packages: an id -> source_package mapping
@@ -141,6 +163,7 @@ class SnapshotDebianOrg:
                       version
                     - files (list): list of {hash, filename} dicts
                - basedir: the base directory for file copies
+               - log: a logging.Logger object
            Returns:
                - an id -> source_package mapping, where each
                  source_package has been augmented with the full path to its
@@ -149,12 +172,12 @@ class SnapshotDebianOrg:
 
         src_packages = self.list_package_files(packages)
 
-        files = []
         ret = {}
 
         pool = os.path.join(basedir, '.pool')
         os.makedirs(pool, exist_ok=True)
 
+        files = []
         for id, pkg in src_packages.items():
             srcpkg_name = pkg['name']
             srcpkg_version = str(pkg['version'])
@@ -180,5 +203,46 @@ class SnapshotDebianOrg:
             ret[id] = ret_pkg
 
         self.copy_files_to_dirs(files, pool)
+
+        missing_files = []
+        for id, pkg in ret.items():
+            destdir = os.path.dirname(pkg['dsc'])
+            with open(pkg['dsc'], 'rb') as fh:
+                dsc = Dsc(fh)
+            for file in dsc['Files']:
+                if not os.path.isfile(os.path.join(destdir, file['name'])):
+                    missing_files.append((destdir, file, id))
+
+        missing_file_names = set(f[1]['name'] for f in missing_files)
+        retrieved_files = self.list_files_by_name(missing_file_names)
+
+        pkgs_with_really_missing_files = defaultdict(list)
+        missing_files_to_copy = []
+
+        for destdir, file, id in missing_files:
+            filename = file['name']
+            missing_hashes = retrieved_files[filename]
+            if len(missing_hashes) != 1:
+                pkgs_with_really_missing_files[id].append(filename)
+                continue
+            missing_file = file.copy()
+            missing_file['hash'] = missing_hashes[0]
+            missing_file['destdir'] = destdir
+            missing_files_to_copy.append(missing_file)
+
+        self.copy_files_to_dirs(missing_files_to_copy, pool)
+
+        for pkg_id, filenames in pkgs_with_really_missing_files.items():
+            pkg = ret[id]
+            del ret[id]
+            if log:
+                log.warn('Missing files in package %s_%s' %
+                         (pkg['name'], pkg['version'], ', '.join(filenames)),
+                         extra={
+                             'swh_type': 'deb_snapshot_missing_files',
+                             'swh_pkgname': pkg['name'],
+                             'swh_pkgver': pkg['version'],
+                             'swh_missing_files': filenames,
+                         })
 
         return ret
