@@ -39,7 +39,12 @@ def extract_src_pkg(dsc_path, destdir, log=None):
 
     """
     if log:
-        log.debug('extract Debian source package %s' % dsc_path)
+        log.debug('extract Debian source package %s in %s' %
+                  (dsc_path, destdir.decode('utf-8')), extra={
+                      'swh_type': 'deb_extract',
+                      'swh_dsc': dsc_path,
+                      'swh_destdir': destdir.decode('utf-8'),
+                  })
 
     destdir_tmp = b''.join([destdir, b'.tmp'])
     logfile = b''.join([destdir, b'.log'])
@@ -154,7 +159,10 @@ def get_package_metadata(dsc_path, extracted_path, log=None):
             if log:
                 log.warn('Unknown encoding for changelog %s,'
                          ' falling back to iso' %
-                         changelog_path.decode('utf-8'))
+                         changelog_path.decode('utf-8'), extra={
+                             'swh_type': 'deb_changelog_encoding',
+                             'swh_changelog': changelog_path.decode('utf-8'),
+                         })
 
             # need to reset as Changelog scrolls to the end of the file
             changelog.seek(0)
