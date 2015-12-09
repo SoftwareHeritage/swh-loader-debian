@@ -4,8 +4,8 @@
 # See top-level LICENSE file for more information
 
 import datetime
-import glob
 import os
+import re
 import subprocess
 import shutil
 import tempfile
@@ -20,7 +20,8 @@ from swh.loader.dir.git.git import (
 
 from . import converters
 
-DEBIAN_KEYRINGS = glob.glob('/usr/share/keyrings/*')
+
+UPLOADERS_SPLIT = re.compile(r'(?<=\>)\s*,\s*')
 
 
 def extract_src_pkg(dsc_path, destdir, log=None):
@@ -124,23 +125,23 @@ def get_gpg_info_signature(gpg_info):
     dt = dt.replace(tzinfo=datetime.timezone.utc)
 
     ret = {
-        'committer_date': dt,
-        'committer_offset': 0,
-        'committer_keyid': key_id,
+        'date': dt,
+        'keyid': key_id,
     }
 
-    ret.update(converters.uid_to_person(uid, 'committer'))
+    ret['person'] = converters.uid_to_person(uid, encode=False)
 
     return ret
 
 
-def get_package_metadata(dsc_path, extracted_path, log=None):
+def get_package_metadata(package, extracted_path, keyrings, log=None):
     """Get the package metadata from the source package at dsc_path,
     extracted in extracted_path.
 
     Args:
-        dsc_path: the path to the package's dsc file
+        package: the package dict (with a dsc_path key)
         extracted_path: the path where the package got extracted
+        keyrings: a list of keyrings to use for gpg actions
         log: a logging.Logger object
 
     Returns: a dict with the following keys
@@ -151,6 +152,22 @@ def get_package_metadata(dsc_path, extracted_path, log=None):
     """
     ret = {}
 
+    # Parse the dsc file to retrieve all the original artifact files
+    dsc_path = package['dsc']
+    with open(dsc_path, 'rb') as dsc:
+        parsed_dsc = Dsc(dsc)
+
+    source_files = [get_file_info(dsc_path)]
+
+    dsc_dir = os.path.dirname(dsc_path)
+    for file in parsed_dsc['files']:
+        file_path = os.path.join(dsc_dir, file['name'])
+        file_info = get_file_info(file_path)
+        source_files.append(file_info)
+
+    ret['original_artifact'] = source_files
+
+    # Parse the changelog to retrieve the rest of the package information
     changelog_path = os.path.join(extracted_path, b'debian/changelog')
     with open(changelog_path, 'rb') as changelog:
         try:
@@ -168,35 +185,35 @@ def get_package_metadata(dsc_path, extracted_path, log=None):
             changelog.seek(0)
             parsed_changelog = Changelog(changelog, encoding='iso-8859-15')
 
-    ret['history'] = [(block.package, str(block.version))
-                      for block in parsed_changelog]
+    package_info = {
+        'name': package['name'],
+        'version': str(package['version']),
+        'id': package['id'],
+        'changelog': {
+            'person': converters.uid_to_person(parsed_changelog.author),
+            'date': parse_date(parsed_changelog.date),
+            'history': [(block.package, str(block.version))
+                        for block in parsed_changelog][1:],
+        }
+    }
 
-    ret.update(converters.uid_to_person(parsed_changelog.author, 'author'))
-    date = parse_date(parsed_changelog.date)
-    ret['author_date'] = date
-    ret['author_offset'] = date.tzinfo.utcoffset(date).seconds // 60
+    gpg_info = parsed_dsc.get_gpg_info(keyrings=keyrings)
+    package_info['pgp_signature'] = get_gpg_info_signature(gpg_info)
 
-    with open(dsc_path, 'rb') as dsc:
-        parsed_dsc = Dsc(dsc)
+    maintainers = [
+        converters.uid_to_person(parsed_dsc['Maintainer'], encode=False),
+    ]
+    maintainers.extend(
+        converters.uid_to_person(person, encode=False)
+        for person in UPLOADERS_SPLIT.split(parsed_dsc.get('Uploaders', ''))
+    )
+    package_info['maintainers'] = maintainers
 
-    source_files = [get_file_info(dsc_path)]
-
-    dsc_dir = os.path.dirname(dsc_path)
-    for file in parsed_dsc['files']:
-        file_path = os.path.join(dsc_dir, file['name'])
-        file_info = get_file_info(file_path)
-        source_files.append(file_info)
-
-    ret['source_files'] = source_files
-
-    gpg_info = parsed_dsc.get_gpg_info(keyrings=DEBIAN_KEYRINGS)
-
-    ret.update(get_gpg_info_signature(gpg_info))
-
+    ret['package_info'] = package_info
     return ret
 
 
-def process_source_package(package, log=None):
+def process_source_package(package, keyrings, log=None):
     """Process a source package into its constituent components.
 
     The source package will be decompressed in a temporary directory.
@@ -206,6 +223,8 @@ def process_source_package(package, log=None):
             name: source package name
             version: source package version
             dsc: the full path of the package's DSC file.
+        keyrings: a list of keyrings to use for gpg actions
+        log: a logging.Logger object
 
     Returns:
         A tuple with two elements:
@@ -239,16 +258,18 @@ def process_source_package(package, log=None):
     package = package.copy()
     package['basedir'] = basedir
     package['directory'] = root_tree['sha1_git']
-    package['metadata'] = get_package_metadata(package['dsc'], debdir, log=log)
+    package['metadata'] = get_package_metadata(package, debdir, keyrings,
+                                               log=log)
 
     return package, converters.dedup_objects(parsed_objects)
 
 
-def process_source_packages(packages, log=None):
+def process_source_packages(packages, keyrings, log=None):
     """Execute process_source_package, but for lists of packages.
 
     Args:
         packages: an iterable of packages as expected by process_source_package
+        keyrings: a list of keyrings to use for gpg actions
         log: a logging.Logger object
 
     Returns: a generator of partial results.
@@ -273,7 +294,7 @@ def process_source_packages(packages, log=None):
     tempdirs = []
 
     for package in packages:
-        ret_package, package_objs = process_source_package(package)
+        ret_package, package_objs = process_source_package(package, keyrings)
         ret_packages.append(ret_package)
         converters.merge_objects(objects, package_objs)
         tempdirs.append(ret_package['basedir'])
@@ -324,6 +345,28 @@ def flush_directory(storage, partial_result, log=None):
     """
     storage.directory_add(partial_result['objects']['directory'].values())
     partial_result['objects']['directory'] = {}
+
+
+def flush_revision(storage, partial_result, log=None):
+    """Flush the revisions from a partial_result to storage
+
+    Args:
+        storage: an instance of swh.storage.Storage
+        partial_result: a partial result as yielded by process_source_packages
+        log: a logging.Logger object
+    Returns:
+        The package objects augmented with a revision argument
+    """
+    packages = [package.copy() for package in partial_result['packages']]
+    revisions = []
+    for package in packages:
+        revision = converters.package_to_revision(package)
+        revisions.append(revision)
+        package['revision'] = revision
+
+    storage.revision_add(revisions)
+
+    return packages
 
 
 def remove_tempdirs(partial_result, log=None):

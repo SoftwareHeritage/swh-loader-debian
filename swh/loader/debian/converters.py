@@ -4,11 +4,19 @@
 # See top-level LICENSE file for more information
 
 from collections import defaultdict
+import copy
+import datetime
 import email.utils
 import os
 
+from swh.model import identifiers
 from swh.loader.dir.converters import tree_to_directory
 from swh.loader.dir.git.git import GitType
+
+ROBOT_AUTHOR = {
+    'name': b'Software Heritage',
+    'email': b'robot@softwareheritage.org',
+}
 
 
 def blob_to_shallow_content(obj, other_objs):
@@ -57,6 +65,51 @@ def shallow_content_to_content(obj, content_max_length_one):
     del content['path']
 
     return content
+
+
+def package_to_revision(package):
+    """Convert a package dictionary to a revision suitable for storage.
+
+    Args:
+        - package: a dictionary with the following keys:
+
+    Returns:
+        A revision suitable for persistence in swh.storage
+    """
+
+    metadata = package['metadata']
+    message = 'Synthetic revision for Debian source package %s version %s' % (
+        package['name'], package['version'])
+
+    def prepare(obj):
+        if isinstance(obj, list):
+            return [prepare(item) for item in obj]
+        elif isinstance(obj, dict):
+            return {k: prepare(v) for k, v in obj.items()}
+        elif isinstance(obj, datetime.datetime):
+            return obj.isoformat()
+        elif isinstance(obj, bytes):
+            return obj.decode('utf-8')
+        else:
+            return copy.deepcopy(obj)
+
+    ret = {
+        'author': metadata['package_info']['changelog']['person'],
+        'date': metadata['package_info']['changelog']['date'],
+        'committer': ROBOT_AUTHOR,
+        'committer_date': metadata['package_info']['pgp_signature']['date'],
+        'type': 'dsc',
+        'directory': package['directory'],
+        'message': message.encode('utf-8'),
+        'synthetic': True,
+        'parents': [],
+        'metadata': prepare(metadata),
+    }
+
+    rev_id = bytes.fromhex(identifiers.revision_identifier(ret))
+    ret['id'] = rev_id
+
+    return ret
 
 
 def dedup_objects(objects, remove_duplicates=True):
@@ -134,36 +187,32 @@ def merge_objects(accumulator, updates, remove_duplicates=True):
                 os.unlink(cur_updates[update_key]['path'])
 
 
-def uid_to_person(uid, key=None):
+def uid_to_person(uid, encode=True):
     """Convert an uid to a person suitable for insertion.
 
     Args:
         uid: an uid of the form "Name <email@ddress>"
-        key: the key in which the values are stored
-
+        encode: whether to convert the output to bytes or not
     Returns: a dictionary with keys:
-        key_name (or name if key is None): the name associated to the uid
-        key_email (or email if key is None): the mail associated to the uid
+        name: the name associated to the uid
+        email: the mail associated to the uid
     """
 
-    if key is not None:
-        name_key = '%s_name' % key
-        mail_key = '%s_email' % key
-    else:
-        name_key = 'name'
-        mail_key = 'mail'
-
     ret = {
-        name_key: '',
-        mail_key: '',
+        'name': '',
+        'email': '',
     }
 
     name, mail = email.utils.parseaddr(uid)
 
     if name and email:
-        ret[name_key] = name
-        ret[mail_key] = mail
+        ret['name'] = name
+        ret['email'] = mail
     else:
-        ret[name_key] = uid
+        ret['name'] = uid
+
+    if encode:
+        for key in ('name', 'email'):
+            ret[key] = ret[key].encode('utf-8')
 
     return ret
