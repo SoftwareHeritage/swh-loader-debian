@@ -177,6 +177,8 @@ class SnapshotDebianOrg:
         pool = os.path.join(basedir, '.pool')
         os.makedirs(pool, exist_ok=True)
 
+        pkgs_with_really_missing_files = defaultdict(list)
+
         files = []
         for id, pkg in src_packages.items():
             srcpkg_name = pkg['name']
@@ -204,8 +206,15 @@ class SnapshotDebianOrg:
 
         self.copy_files_to_dirs(files, pool)
 
+        for id, pkg in ret.items():
+            if not os.path.exists(pkg['dsc']):
+                intended_dsc = os.path.basename(pkg['dsc'])
+                pkgs_with_really_missing_files[id].append(intended_dsc)
+
         missing_files = []
         for id, pkg in ret.items():
+            if id in pkgs_with_really_missing_files:
+                continue
             destdir = os.path.dirname(pkg['dsc'])
             with open(pkg['dsc'], 'rb') as fh:
                 dsc = Dsc(fh)
@@ -216,7 +225,6 @@ class SnapshotDebianOrg:
         missing_file_names = set(f[1]['name'] for f in missing_files)
         retrieved_files = self.list_files_by_name(missing_file_names)
 
-        pkgs_with_really_missing_files = defaultdict(list)
         missing_files_to_copy = []
 
         for destdir, file, id in missing_files:
@@ -233,10 +241,10 @@ class SnapshotDebianOrg:
         self.copy_files_to_dirs(missing_files_to_copy, pool)
 
         for pkg_id, filenames in pkgs_with_really_missing_files.items():
-            pkg = ret[id]
-            del ret[id]
+            pkg = ret[pkg_id]
+            del ret[pkg_id]
             if log:
-                log.warn('Missing files in package %s_%s' %
+                log.warn('Missing files in package %s_%s: %s' %
                          (pkg['name'], pkg['version'], ', '.join(filenames)),
                          extra={
                              'swh_type': 'deb_snapshot_missing_files',

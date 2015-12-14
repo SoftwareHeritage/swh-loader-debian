@@ -7,7 +7,7 @@ import sys
 
 from swh.loader.debian.listers.snapshot import SnapshotDebianOrg
 from swh.loader.debian.loader import (
-    process_source_packages, try_flush_partial, flush_revision)
+    process_source_packages, try_flush_partial, flush_release, flush_revision)
 from swh.storage.storage import Storage
 
 logging.basicConfig()
@@ -53,3 +53,4 @@ if partial:
                       directory_packet_size=25000, force=True, log=log)
 
     packages = flush_revision(storage, partial)
+    revisions = flush_release(storage, packages)

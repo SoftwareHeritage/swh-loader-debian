@@ -71,7 +71,12 @@ def package_to_revision(package):
     """Convert a package dictionary to a revision suitable for storage.
 
     Args:
-        - package: a dictionary with the following keys:
+        package: a dictionary with the following keys:
+            metadata: the metadata for the package, containing
+                package_info:
+                    changelog
+                    pgp_signature
+            directory
 
     Returns:
         A revision suitable for persistence in swh.storage
@@ -107,6 +112,42 @@ def package_to_revision(package):
     }
 
     rev_id = bytes.fromhex(identifiers.revision_identifier(ret))
+    ret['id'] = rev_id
+
+    return ret
+
+
+def package_to_release(package):
+    """Convert a package dictionary to a revision suitable for storage.
+
+    Args:
+        package: a dictionary with the following keys:
+            metadata: the metadata for the package, containing
+                package_info
+                    changelog
+                        person
+                        date
+            revision
+
+    Returns:
+        A revision suitable for persistence in swh.storage
+    """
+    package_info = package['metadata']['package_info']
+
+    message = 'Synthetic release for Debian source package %s version %s' % (
+        package['name'], package['version'])
+
+    ret = {
+        'author': package_info['changelog']['person'],
+        'date': package_info['changelog']['date'],
+        'target': package['revision']['id'],
+        'target_type': 'revision',
+        'message': message.encode('utf-8'),
+        'synthetic': True,
+        'name': str(package['version']),
+    }
+
+    rev_id = bytes.fromhex(identifiers.release_identifier(ret))
     ret['id'] = rev_id
 
     return ret

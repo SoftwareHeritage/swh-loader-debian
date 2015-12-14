@@ -373,6 +373,27 @@ def flush_revision(storage, partial_result, log=None):
     return packages
 
 
+def flush_release(storage, packages, log=None):
+    """Flush the revisions from a partial_result to storage
+
+    Args:
+        storage: an instance of swh.storage.Storage
+        packages: a list of packages as returned by flush_revision
+        log: a logging.Logger object
+    Returns:
+        The package objects augmented with a revision argument
+    """
+    releases = []
+    for package in packages:
+        release = converters.package_to_release(package)
+        releases.append(release)
+        package['release'] = release
+
+    storage.release_add(releases)
+
+    return packages
+
+
 def remove_tempdirs(partial_result, log=None):
     """Remove the temporary files for the packages listed"""
     for tempdir in partial_result['tempdirs']:
