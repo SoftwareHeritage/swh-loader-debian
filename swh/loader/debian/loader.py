@@ -24,6 +24,11 @@ from . import converters
 UPLOADERS_SPLIT = re.compile(r'(?<=\>)\s*,\s*')
 
 
+class PackageExtractionFailed(Exception):
+    """Raise this exception when a package extraction failed"""
+    pass
+
+
 def extract_src_pkg(dsc_path, destdir, log=None):
     """Extract a Debian source package to a given directory
 
@@ -56,8 +61,17 @@ def extract_src_pkg(dsc_path, destdir, log=None):
            '-x', dsc_path,
            destdir_tmp]
 
-    with open(logfile, 'w') as stdout:
-        subprocess.check_call(cmd, stdout=stdout, stderr=subprocess.STDOUT)
+    try:
+        with open(logfile, 'w') as stdout:
+            subprocess.check_call(cmd, stdout=stdout, stderr=subprocess.STDOUT)
+    except subprocess.CalledProcessError:
+        log.warn('extracting Debian package %s failed: see logfile %s' %
+                 (dsc_path, logfile.decode('utf-8')), extra={
+                     'swh_type': 'deb_extract_failed',
+                     'swh_dsc': dsc_path,
+                     'swh_log': open(logfile, 'r').read(),
+                 })
+        raise PackageExtractionFailed()
 
     os.rename(destdir_tmp, destdir)
 
@@ -245,6 +259,7 @@ def process_source_package(package, keyrings, log=None):
 
     Raises:
         - FileNotFoundError if the dsc file does not exist.
+        - PackageExtractionFailed if the package extraction failed
     """
 
     if not os.path.exists(package['dsc']):
@@ -301,7 +316,11 @@ def process_source_packages(packages, keyrings, log=None):
     tempdirs = []
 
     for package in packages:
-        ret_package, package_objs = process_source_package(package, keyrings)
+        try:
+            ret_package, package_objs = process_source_package(
+                package, keyrings, log=log)
+        except PackageExtractionFailed:
+            continue
         ret_packages.append(ret_package)
         converters.merge_objects(objects, package_objs)
         tempdirs.append(ret_package['basedir'])
