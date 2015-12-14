@@ -34,6 +34,7 @@ storage = Storage('dbname=softwareheritage-dev',
 partial = {}
 for partial in process_source_packages(sorted_pkgs, keyrings, log=log):
     print(
+        partial['packages'][-1]['name'],
         partial['packages'][-1]['version'],
         len(partial['objects']['directory']),
         '(%s)' % len(partial['objects']['directory_seen']),
