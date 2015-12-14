@@ -188,7 +188,10 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
     package_info = {
         'name': package['name'],
         'version': str(package['version']),
-        'id': package['id'],
+        'lister_metadata': {
+            'lister': 'snapshot.debian.org',
+            'id': package['id'],
+        },
         'changelog': {
             'person': converters.uid_to_person(parsed_changelog.author),
             'date': parse_date(parsed_changelog.date),
@@ -210,6 +213,7 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
     package_info['maintainers'] = maintainers
 
     ret['package_info'] = package_info
+
     return ret
 
 
