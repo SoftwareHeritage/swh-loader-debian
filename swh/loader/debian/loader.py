@@ -200,8 +200,11 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
         }
     }
 
-    gpg_info = parsed_dsc.get_gpg_info(keyrings=keyrings)
-    package_info['pgp_signature'] = get_gpg_info_signature(gpg_info)
+    try:
+        gpg_info = parsed_dsc.get_gpg_info(keyrings=keyrings)
+        package_info['pgp_signature'] = get_gpg_info_signature(gpg_info)
+    except ValueError:
+        package_info['pgp_signature'] = None
 
     maintainers = [
         converters.uid_to_person(parsed_dsc['Maintainer'], encode=False),
@@ -364,7 +367,7 @@ def flush_revision(storage, partial_result, log=None):
     packages = [package.copy() for package in partial_result['packages']]
     revisions = []
     for package in packages:
-        revision = converters.package_to_revision(package)
+        revision = converters.package_to_revision(package, log=log)
         revisions.append(revision)
         package['revision'] = revision
 

@@ -67,7 +67,7 @@ def shallow_content_to_content(obj, content_max_length_one):
     return content
 
 
-def package_to_revision(package):
+def package_to_revision(package, log=None):
     """Convert a package dictionary to a revision suitable for storage.
 
     Args:
@@ -98,11 +98,25 @@ def package_to_revision(package):
         else:
             return copy.deepcopy(obj)
 
+    signature = metadata['package_info']['pgp_signature']
+    if signature:
+        committer_date = signature['date']
+    else:
+        if log:
+            log.info('No PGP signature on package %s_%s' %
+                     (package['name'], package['version']),
+                     extra={
+                         'swh_type': 'deb_missing_signature',
+                         'swh_packagename': package['name'],
+                         'swh_packagever': package['version'],
+                     })
+            committer_date = metadata['package_info']['changelog']['date']
+
     ret = {
         'author': metadata['package_info']['changelog']['person'],
         'date': metadata['package_info']['changelog']['date'],
         'committer': ROBOT_AUTHOR,
-        'committer_date': metadata['package_info']['pgp_signature']['date'],
+        'committer_date': committer_date,
         'type': 'dsc',
         'directory': package['directory'],
         'message': message.encode('utf-8'),
