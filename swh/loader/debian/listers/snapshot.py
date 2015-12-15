@@ -144,6 +144,31 @@ class SnapshotDebianOrg:
             if not os.path.exists(dst):
                 os.link(src1, dst)
 
+    def prepare_origins(self, package_names, storage, log=None):
+        """Prepare the origins for the given packages.
+
+        Args:
+            package_names: a list of source package names
+            storage: an instance of swh.storage.Storage
+
+        Returns:
+            a name -> origin dict where origin is itself a dict with the
+            following keys:
+                id: id of the origin
+                type: deb
+                url: the snapshot.debian.org URL for the package
+        """
+        ret = {}
+        for name in package_names:
+            origin = {
+                'type': 'deb',
+                'url': 'http://snapshot.debian.org/package/%s/' % name,
+            }
+            origin['id'] = storage.origin_add_one(origin)
+            ret[name] = origin
+
+        return ret
+
     def copy_package_files(self, packages, basedir, log=None):
         """Copy all the files for the packages `packages` in `basedir`.
 
