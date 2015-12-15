@@ -99,6 +99,8 @@ def package_to_revision(package, log=None):
             return copy.deepcopy(obj)
 
     signature = metadata['package_info']['pgp_signature']
+
+    committer_date = None
     if signature:
         committer_date = signature['date']
     else:
@@ -110,7 +112,7 @@ def package_to_revision(package, log=None):
                          'swh_packagename': package['name'],
                          'swh_packagever': package['version'],
                      })
-            committer_date = metadata['package_info']['changelog']['date']
+        committer_date = metadata['package_info']['changelog']['date']
 
     ret = {
         'author': metadata['package_info']['changelog']['person'],
