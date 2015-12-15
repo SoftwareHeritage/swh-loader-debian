@@ -403,7 +403,7 @@ def flush_release(storage, packages, log=None):
         packages: a list of packages as returned by flush_revision
         log: a logging.Logger object
     Returns:
-        The package objects augmented with a revision argument
+        The package objects augmented with a release argument
     """
     releases = []
     for package in packages:
@@ -414,6 +414,31 @@ def flush_release(storage, packages, log=None):
     storage.release_add(releases)
 
     return packages
+
+
+def flush_occurrences(storage, packages, default_occurrences, log=None):
+    """Flush the occurrences from a partial_result to storage
+    Args:
+        storage: an instance of swh.storage.Storage
+        packages: a list of packages as returned by flush_release
+        default_occurrences: a list of occurrences with default values
+        log: a logging.Logger object
+    Returns:
+        The written occurrence objects
+    """
+    occurrences = []
+
+    for package in packages:
+        for default_occurrence in default_occurrences:
+            occurrence = default_occurrence.copy()
+            occurrence['revision'] = package['revision']['id']
+            occurrence['branch'] = str(package['version'])
+            occurrence['origin'] = package['origin_id']
+            occurrences.append(occurrence)
+
+    storage.occurrence_add(occurrences)
+
+    return occurrences
 
 
 def remove_tempdirs(partial_result, log=None):

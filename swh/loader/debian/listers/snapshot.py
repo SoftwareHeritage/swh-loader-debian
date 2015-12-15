@@ -169,11 +169,11 @@ class SnapshotDebianOrg:
 
         return ret
 
-    def copy_package_files(self, packages, basedir, log=None):
-        """Copy all the files for the packages `packages` in `basedir`.
+    def prepare_packages(self, packages, basedir, log=None):
+        """Prepare all the source packages from `packages` for processing.
 
            Step 1: create a pool as basedir/.pool
-           Step 2: for each package version, create a directory
+           Step 2: for each version of each package, create a directory
                    basedir/package_version
            Step 3: copy all the files for each package version
                    to basedir/package_version/ using copy_files_to_dirs (and
@@ -181,18 +181,18 @@ class SnapshotDebianOrg:
            Step 4: parse all the dsc files and retrieve the remaining files
 
            Args:
-               - packages: an id -> source_package mapping
-                 where each source_package is a dict containing:
-                    - name (str): source package name
-                    - version (debian_support.Version): source package
-                      version
-                    - files (list): list of {hash, filename} dicts
-               - basedir: the base directory for file copies
-               - log: a logging.Logger object
+               packages: a list of source package names
+               basedir: the base directory for file copies
+               log: a logging.Logger object
            Returns:
-               - an id -> source_package mapping, where each
-                 source_package has been augmented with the full path to its
-                 dsc file in the 'dsc' key.
+               an id -> source_package mapping, where each source_package is
+               a dict with the following keys:
+                   id: the id of the source package in snapshot.debian.org
+                   name: the source package name
+                   version: the version of the source package
+                   files: a list of the files the source package uses
+                          (with hash and name)
+                   dsc: the full path to the package's dsc file.
         """
 
         src_packages = self.list_package_files(packages)
