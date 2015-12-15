@@ -9,6 +9,7 @@ import re
 import subprocess
 import shutil
 import tempfile
+import traceback
 
 from dateutil.parser import parse as parse_date
 from debian.changelog import Changelog
@@ -65,12 +66,15 @@ def extract_src_pkg(dsc_path, destdir, log=None):
         with open(logfile, 'w') as stdout:
             subprocess.check_call(cmd, stdout=stdout, stderr=subprocess.STDOUT)
     except subprocess.CalledProcessError:
-        log.warn('extracting Debian package %s failed: see logfile %s' %
-                 (dsc_path, logfile.decode('utf-8')), extra={
-                     'swh_type': 'deb_extract_failed',
-                     'swh_dsc': dsc_path,
-                     'swh_log': open(logfile, 'r').read(),
-                 })
+        if log:
+            data = open(logfile, 'r').read()
+            log.warn('extracting Debian package %s failed: %s' %
+                     (dsc_path, data),
+                     extra={
+                         'swh_type': 'deb_extract_failed',
+                         'swh_dsc': dsc_path,
+                         'swh_log': data,
+                     })
         raise PackageExtractionFailed()
 
     os.rename(destdir_tmp, destdir)
@@ -192,6 +196,8 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
                          ' falling back to iso' %
                          changelog_path.decode('utf-8'), extra={
                              'swh_type': 'deb_changelog_encoding',
+                             'swh_name': package['name'],
+                             'swh_version': str(package['version']),
                              'swh_changelog': changelog_path.decode('utf-8'),
                          })
 
@@ -218,6 +224,14 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
         gpg_info = parsed_dsc.get_gpg_info(keyrings=keyrings)
         package_info['pgp_signature'] = get_gpg_info_signature(gpg_info)
     except ValueError:
+        if log:
+            log.info('Could not get PGP signature on package %s_%s' %
+                     (package['name'], package['version']),
+                     extra={
+                         'swh_type': 'deb_missing_signature',
+                         'swh_name': package['name'],
+                         'swh_version': str(package['version']),
+                     })
         package_info['pgp_signature'] = None
 
     maintainers = [
@@ -320,6 +334,24 @@ def process_source_packages(packages, keyrings, log=None):
             ret_package, package_objs = process_source_package(
                 package, keyrings, log=log)
         except PackageExtractionFailed:
+            continue
+        except Exception as e:
+            if log:
+                e_type = e.__class__.__name__
+                e_exc = traceback.format_exception(
+                    e.__class__,
+                    e,
+                    e.__traceback__,
+                )
+                log.warn("Could not process package %s_%s: %s" %
+                         (package['name'], str(package['version']), e_exc),
+                         extra={
+                             'swh_type': 'deb_process_failed',
+                             'swh_name': package['name'],
+                             'swh_version': str(package['version']),
+                             'swh_exception_type': e_type,
+                             'swh_exception': e_exc,
+                         })
             continue
         ret_packages.append(ret_package)
         converters.merge_objects(objects, package_objs)

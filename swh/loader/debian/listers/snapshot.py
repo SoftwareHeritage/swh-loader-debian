@@ -105,7 +105,7 @@ class SnapshotDebianOrg:
 
         return ret
 
-    def copy_files_to_dirs(self, files, pool):
+    def copy_files_to_dirs(self, files, pool, log=None):
         """Copy the files from the snapshot storage to the directory
            `dirname`, via `pool`.
 
@@ -123,7 +123,8 @@ class SnapshotDebianOrg:
 
         hashes = set(file['hash'] for file in files)
 
-        print("%d files to copy" % len(hashes))
+        if log:
+            log.debug("%d files to copy" % len(hashes))
 
         cnt = 0
         for hash in hashes:
@@ -133,10 +134,12 @@ class SnapshotDebianOrg:
                 shutil.copy(src, dst1)
             cnt += 1
             if cnt % 100 == 0:
-                print("%d files copied" % cnt)
+                if log:
+                    log.debug("%d files copied" % cnt)
 
         if cnt % 100 != 0:
-            print("%d files copied" % cnt)
+            if log:
+                log.debug("%d files copied" % cnt)
 
         for file in files:
             src1 = os.path.join(pool, file['hash'])
@@ -229,7 +232,7 @@ class SnapshotDebianOrg:
             ret_pkg['dsc'] = os.path.join(dirname, intended_dsc)
             ret[id] = ret_pkg
 
-        self.copy_files_to_dirs(files, pool)
+        self.copy_files_to_dirs(files, pool, log)
 
         for id, pkg in ret.items():
             if not os.path.exists(pkg['dsc']):
@@ -263,7 +266,7 @@ class SnapshotDebianOrg:
             missing_file['destdir'] = destdir
             missing_files_to_copy.append(missing_file)
 
-        self.copy_files_to_dirs(missing_files_to_copy, pool)
+        self.copy_files_to_dirs(missing_files_to_copy, pool, log)
 
         for pkg_id, filenames in pkgs_with_really_missing_files.items():
             pkg = ret[pkg_id]
@@ -273,6 +276,7 @@ class SnapshotDebianOrg:
                          (pkg['name'], pkg['version'], ', '.join(filenames)),
                          extra={
                              'swh_type': 'deb_snapshot_missing_files',
+                             'swh_pkgid': pkg['id'],
                              'swh_pkgname': pkg['name'],
                              'swh_pkgver': pkg['version'],
                              'swh_missing_files': filenames,

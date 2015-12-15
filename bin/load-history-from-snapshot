@@ -12,7 +12,7 @@ from swh.loader.debian.loader import (
     flush_release, flush_revision)
 from swh.storage.storage import Storage
 
-logging.basicConfig()
+logging.basicConfig(level=logging.DEBUG)
 
 log = logging.getLogger('swh.loader.debian.load_history_from_snapshot')
 
