@@ -24,7 +24,7 @@ DEFAULT_CONFIG = {
     'snapshot_connstr': ('str', 'service=snapshot'),
     'snapshot_basedir': ('str', '/home/ndandrim/tmp/snapshot.d.o'),
     'storage_class': ('str', 'local_storage'),
-    'storage_args': ('list', [
+    'storage_args': ('list[str]', [
         'dbname=softwareheritage-dev',
         '/tmp/swh-loader-debian/objects',
     ]),
@@ -32,7 +32,7 @@ DEFAULT_CONFIG = {
     'content_packet_length': ('int', 1024 ** 3),
     'content_max_length_one': ('int', 100 * 1024**2),
     'directory_packet_size': ('int', 25000),
-    'keyrings': ('list', glob.glob('/usr/share/keyrings/*')),
+    'keyrings': ('list[str]', glob.glob('/usr/share/keyrings/*')),
 }
 
 
