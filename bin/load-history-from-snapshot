@@ -1,74 +1,14 @@
 #!/usr/bin/python3
 
-import dateutil
-import glob
 import logging
-import os
 import sys
 
-from swh.loader.debian.listers.snapshot import SnapshotDebianOrg
-from swh.loader.debian.loader import (
-    process_source_packages, try_flush_partial, flush_occurrences,
-    flush_release, flush_revision)
-from swh.storage.storage import Storage
+from swh.loader.debian.tasks import LoadSnapshotPackages
 
 logging.basicConfig(level=logging.DEBUG)
 
-log = logging.getLogger('swh.loader.debian.load_history_from_snapshot')
+package_names = sys.argv
 
-keyrings = glob.glob('/usr/share/keyrings/*')
-default_occurrences = [
-    # Software Heritage
-    {
-        'authority': '5f4d4c51-498a-4e28-88b3-b3e4e8396cba',
-        'validity': dateutil.parser.parse('Sun, 30 Aug 2015 14:33:08 +0200'),
-    }
-]
+t = LoadSnapshotPackages()
 
-s = SnapshotDebianOrg(connstr='service=snapshot',
-                      basedir=os.path.expanduser('~/tmp/snapshot.d.o'))
-
-source_package_dir = sys.argv[1]
-package_names = sys.argv[2:]
-
-pkgs = s.prepare_packages(package_names, source_package_dir, log=log)
-
-storage = Storage('dbname=softwareheritage-dev',
-                  '/tmp/swh-loader-debian/objects')
-
-origins = s.prepare_origins(package_names, storage)
-sorted_pkgs = []
-
-for p in pkgs.values():
-    if os.path.exists(p['dsc']):
-        p['origin_id'] = origins[p['name']]['id']
-        sorted_pkgs.append(p)
-
-sorted_pkgs.sort(key=lambda p: (p['name'], p['version']))
-
-partial = {}
-for partial in process_source_packages(sorted_pkgs, keyrings, log=log):
-    print(
-        partial['packages'][-1]['name'],
-        partial['packages'][-1]['version'],
-        len(partial['objects']['directory']),
-        '(%s)' % len(partial['objects']['directory_seen']),
-        len(partial['objects']['content']),
-        '(%s)' % len(partial['objects']['content_seen']),
-    )
-
-    try_flush_partial(storage, partial, content_packet_size=10000,
-                      content_packet_length=1024 * 1024 * 1024,
-                      content_max_length_one=100 * 1024 * 1024,
-                      directory_packet_size=25000, log=log)
-
-if partial:
-    try_flush_partial(storage, partial, content_packet_size=10000,
-                      content_packet_length=1024 * 1024 * 1024,
-                      content_max_length_one=100 * 1024 * 1024,
-                      directory_packet_size=25000, force=True, log=log)
-
-    packages = flush_revision(storage, partial, log=log)
-    packages_w_revisions = flush_release(storage, packages)
-    occurrences = flush_occurrences(storage, packages_w_revisions,
-                                    default_occurrences)
+t.run(*package_names)
