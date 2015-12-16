@@ -10,8 +10,9 @@ import tempfile
 
 import dateutil
 
+from swh.core.config import load_named_config
 from swh.core.scheduling import Task
-from swh.storage.storage import Storage
+from swh.storage import get_storage
 
 from .listers.snapshot import SnapshotDebianOrg
 from .loader import (
@@ -20,39 +21,48 @@ from .loader import (
 
 
 DEFAULT_CONFIG = {
-    'snapshot_connstr': 'service=snapshot',
-    'snapshot_basedir': '/home/ndandrim/tmp/snapshot.d.o',
-    'storage_args': [
+    'snapshot_connstr': ('str', 'service=snapshot'),
+    'snapshot_basedir': ('str', '/home/ndandrim/tmp/snapshot.d.o'),
+    'storage_class': ('str', 'local_storage'),
+    'storage_args': ('list', [
         'dbname=softwareheritage-dev',
         '/tmp/swh-loader-debian/objects',
-    ],
-    'content_packet_size': 10000,
-    'content_packet_length': 1024 ** 3,
-    'content_max_length_one': 100 * 1024**2,
-    'directory_packet_size': 25000,
-    'keyrings': glob.glob('/usr/share/keyrings/*'),
+    ]),
+    'content_packet_size': ('int', 10000),
+    'content_packet_length': ('int', 1024 ** 3),
+    'content_max_length_one': ('int', 100 * 1024**2),
+    'directory_packet_size': ('int', 25000),
+    'keyrings': ('list', glob.glob('/usr/share/keyrings/*')),
 }
 
 
-class LoadSnapshotPackage(Task):
+class LoadSnapshotPackages(Task):
     task_queue = 'swh_loader_debian'
+
+    @property
+    def config(self):
+        if not hasattr(self, '__config'):
+            self.__config = load_named_config(
+                'loader/debian.ini',
+                DEFAULT_CONFIG,
+            )
+        return self.__config
 
     def run(self, *package_names):
         """Load the history of the given package from snapshot.debian.org"""
 
-        config = DEFAULT_CONFIG
-
         snapshot = SnapshotDebianOrg(
-            connstr=config['snapshot_connstr'],
-            basedir=config['snapshot_basedir'],
+            connstr=self.config['snapshot_connstr'],
+            basedir=self.config['snapshot_basedir'],
         )
 
-        storage = Storage(
-            *config['storage_args']
+        storage = get_storage(
+            self.config['storage_class'],
+            self.config['storage_args'],
         )
 
         swh_authority_dt = open(
-            os.path.join(config['snapshot_basedir'], 'TIMESTAMP')
+            os.path.join(self.config['snapshot_basedir'], 'TIMESTAMP')
         ).read()
 
         swh_authority = {
@@ -72,35 +82,35 @@ class LoadSnapshotPackage(Task):
 
         sorted_pkgs = []
         for p in pkgs.values():
-            if os.path.exists(p['dsc']):
-                p['origin_id'] = origins[p['name']]['id']
-                sorted_pkgs.append(p)
+            p['origin_id'] = origins[p['name']]['id']
+            sorted_pkgs.append(p)
 
         sorted_pkgs.sort(key=lambda p: (p['name'], p['version']))
 
         partial = {}
         for partial in process_source_packages(
                 sorted_pkgs,
-                config['keyrings'],
+                self.config['keyrings'],
+                tmpdir,
                 log=self.log,
         ):
 
             try_flush_partial(
                 storage, partial,
-                content_packet_size=config['content_packet_size'],
-                content_packet_length=config['content_packet_length'],
-                content_max_length_one=config['content_max_length_one'],
-                directory_packet_size=config['directory_packet_size'],
+                content_packet_size=self.config['content_packet_size'],
+                content_packet_length=self.config['content_packet_length'],
+                content_max_length_one=self.config['content_max_length_one'],
+                directory_packet_size=self.config['directory_packet_size'],
                 log=self.log,
             )
 
         if partial:
             try_flush_partial(
                 storage, partial,
-                content_packet_size=config['content_packet_size'],
-                content_packet_length=config['content_packet_length'],
-                content_max_length_one=config['content_max_length_one'],
-                directory_packet_size=config['directory_packet_size'],
+                content_packet_size=self.config['content_packet_size'],
+                content_packet_length=self.config['content_packet_length'],
+                content_max_length_one=self.config['content_max_length_one'],
+                directory_packet_size=self.config['directory_packet_size'],
                 force=True,
                 log=self.log,
             )
