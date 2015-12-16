@@ -20,7 +20,7 @@ setup(
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/diffusion/DLDDEB/',
     packages=['swh.loader.debian', 'swh.loader.debian.listers'],
-    scripts=['bin/swh-loader-debian'],
+    scripts=['bin/swh-load-deb-snapshot'],
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
     vcversioner={},
