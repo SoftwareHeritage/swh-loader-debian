@@ -19,7 +19,7 @@ setup(
     author='Software Heritage developers',
     author_email='swh-devel@inria.fr',
     url='https://forge.softwareheritage.org/diffusion/DLDDEB/',
-    packages=['swh.loader.debian', 'swh.loader.debian.loaders'],
+    packages=['swh.loader.debian', 'swh.loader.debian.listers'],
     scripts=['bin/swh-loader-debian'],
     install_requires=parse_requirements(),
     setup_requires=['vcversioner'],
