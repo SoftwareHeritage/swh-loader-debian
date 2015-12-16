@@ -16,7 +16,7 @@ from debian.changelog import Changelog
 from debian.deb822 import Dsc
 
 from swh.core import hashutil
-from swh.loader.dir.git.git import (
+from swh.loader.dir.git import (
     walk_and_compute_sha1_from_directory, ROOT_TREE_KEY)
 
 from . import converters
