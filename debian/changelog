@@ -1,8 +1,11 @@
-swh-loader-debian (0.0.1-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-debian (0.0.2-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * Prepare swh.loader.debian release v0.0.2
+  * Add dependencies on python3-debian
+  * Update swh.loader.dir to v0.0.14
+  * Fix configuration data types
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Wed, 16 Dec 2015 14:29:46 +0100
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Wed, 16 Dec 2015 18:42:28 +0100
 
 swh-loader-debian (0.0.1-1~swh1) unstable-swh; urgency=medium
 
