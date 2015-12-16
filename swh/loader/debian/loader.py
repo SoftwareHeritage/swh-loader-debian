@@ -248,7 +248,7 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
     return ret
 
 
-def process_source_package(package, keyrings, log=None):
+def process_source_package(package, keyrings, basedir=None, log=None):
     """Process a source package into its constituent components.
 
     The source package will be decompressed in a temporary directory.
@@ -259,6 +259,7 @@ def process_source_package(package, keyrings, log=None):
             version: source package version
             dsc: the full path of the package's DSC file.
         keyrings: a list of keyrings to use for gpg actions
+        basedir: the base directory where the package gets extracted
         log: a logging.Logger object
 
     Returns:
@@ -287,7 +288,7 @@ def process_source_package(package, keyrings, log=None):
     if not os.path.exists(package['dsc']):
         raise FileNotFoundError('%s does not exist' % package['dsc'])
 
-    basedir = tempfile.mkdtemp()
+    basedir = tempfile.mkdtemp(dir=basedir)
     debdir = os.path.join(basedir, '%s_%s' % (package['name'],
                                               package['version']))
 
@@ -308,12 +309,13 @@ def process_source_package(package, keyrings, log=None):
     return package, converters.dedup_objects(parsed_objects)
 
 
-def process_source_packages(packages, keyrings, log=None):
+def process_source_packages(packages, keyrings, basedir=None, log=None):
     """Execute process_source_package, but for lists of packages.
 
     Args:
         packages: an iterable of packages as expected by process_source_package
         keyrings: a list of keyrings to use for gpg actions
+        basedir: the base directory where packages are extracted
         log: a logging.Logger object
 
     Returns: a generator of partial results.
@@ -340,7 +342,7 @@ def process_source_packages(packages, keyrings, log=None):
     for package in packages:
         try:
             ret_package, package_objs = process_source_package(
-                package, keyrings, log=log)
+                package, keyrings, basedir=basedir, log=log)
         except PackageExtractionFailed:
             continue
         except Exception as e:
