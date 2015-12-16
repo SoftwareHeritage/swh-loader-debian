@@ -1,3 +1,5 @@
 vcversioner
 swh.core
-swh.storage
+swh.loader.dir
+swh.model
+swh.storage >= 0.0.21
