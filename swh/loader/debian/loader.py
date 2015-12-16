@@ -275,6 +275,14 @@ def process_source_package(package, keyrings, log=None):
         - FileNotFoundError if the dsc file does not exist.
         - PackageExtractionFailed if the package extraction failed
     """
+    if log:
+        log.info("Processing package %s_%s" %
+                 (package['name'], str(package['version'])),
+                 extra={
+                     'swh_type': 'deb_process_start',
+                     'swh_name': package['name'],
+                     'swh_version': str(package['version']),
+                 })
 
     if not os.path.exists(package['dsc']):
         raise FileNotFoundError('%s does not exist' % package['dsc'])
