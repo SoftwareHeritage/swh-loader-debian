@@ -339,8 +339,17 @@ def process_source_packages(packages, keyrings, basedir=None, log=None):
     ret_packages = []
     tempdirs = []
 
-    for package in packages:
+    n_pkg = len(packages)
+    for i, package in enumerate(packages):
         try:
+            if log:
+                log.info(
+                    "Processing package %s/%s" % (i+1, n_pkg),
+                    extra={
+                        'swh_type': 'deb_process_progress',
+                        'swh_counter': i+1,
+                        'swh_total': n_pkg,
+                    })
             ret_package, package_objs = process_source_package(
                 package, keyrings, basedir=basedir, log=log)
         except PackageExtractionFailed:

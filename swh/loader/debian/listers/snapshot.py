@@ -198,7 +198,24 @@ class SnapshotDebianOrg:
                    dsc: the full path to the package's dsc file.
         """
 
+        length = len(packages)
+        log.info('Preparing %s source package%s from snapshot.debian.org: %s' %
+                 (length, 's' if length else '', ', '.join(packages)),
+                 extra={
+                     'swh_type': 'deb_snapshot_prepare_packages',
+                     'swh_count': length,
+                     'swh_names': packages,
+                 })
+
         src_packages = self.list_package_files(packages)
+        n_packages = len(src_packages)
+
+        log.info('Found %s package version%s on snapshot.debian.org' %
+                 (n_packages, 's' if n_packages else ''),
+                 extra={
+                     'swh_type': 'deb_snapshot_count_package_versions',
+                     'swh_count': length,
+                 })
 
         ret = {}
 
