@@ -10,6 +10,7 @@ import subprocess
 import shutil
 import tempfile
 import traceback
+import uuid
 
 from dateutil.parser import parse as parse_date
 from debian.changelog import Changelog
@@ -396,8 +397,23 @@ def flush_content(storage, partial_result, content_max_length_one, log=None):
     """
     contents = partial_result['objects']['content']
 
-    missing_ids = storage.content_missing(list(contents.values()),
-                                          key_hash='sha1_git')
+    missing_ids = list(
+        storage.content_missing(list(contents.values()), key_hash='sha1_git')
+    )
+
+    log_id = uuid.uuid4()
+    num_contents = len(contents)
+    num_new_contents = len(missing_ids)
+    if log:
+        log.debug("Sending %d contents (%d new)" % (num_contents,
+                                                    num_new_contents),
+                  extra={
+                      'swh_type': 'storage_send_start',
+                      'swh_content_type': 'content',
+                      'swh_num': num_contents,
+                      'swh_num_new': num_new_contents,
+                      'swh_id': log_id,
+                  })
 
     if missing_ids:
         full_contents = (
@@ -406,6 +422,15 @@ def flush_content(storage, partial_result, content_max_length_one, log=None):
             for i in missing_ids)
 
         storage.content_add(full_contents)
+
+    if log:
+        log.debug("Done sending %d contents" % num_contents,
+                  extra={
+                      'swh_type': 'storage_send_end',
+                      'swh_content_type': 'content',
+                      'swh_num': num_contents,
+                      'swh_id': log_id,
+                  })
 
     partial_result['objects']['content'] = {}
 
@@ -421,7 +446,28 @@ def flush_directory(storage, partial_result, log=None):
     This function mutates partial_result to empty the directory dict
     """
     directories = partial_result['objects']['directory'].values()
+
+    log_id = uuid.uuid4()
+    num_dir = len(directories)
+    if log:
+        log.debug("Sending %d directories" % num_dir,
+                  extra={
+                      'swh_type': 'storage_send_start',
+                      'swh_content_type': 'directory',
+                      'swh_num': num_dir,
+                      'swh_id': log_id,
+                  })
+
     storage.directory_add(list(directories))
+
+    if log:
+        log.debug("Done sending %d directories" % num_dir,
+                  extra={
+                      'swh_type': 'storage_send_end',
+                      'swh_content_type': 'directory',
+                      'swh_num': num_dir,
+                      'swh_id': log_id,
+                  })
 
     partial_result['objects']['directory'] = {}
 
@@ -437,6 +483,18 @@ def flush_revision(storage, partial_result, log=None):
         The package objects augmented with a revision argument
     """
     packages = [package.copy() for package in partial_result['packages']]
+
+    log_id = uuid.uuid4()
+    num_rev = len(packages)
+    if log:
+        log.debug("Sending %d revisions" % num_rev,
+                  extra={
+                      'swh_type': 'storage_send_start',
+                      'swh_content_type': 'revision',
+                      'swh_num': num_rev,
+                      'swh_id': log_id,
+                  })
+
     revisions = []
     for package in packages:
         revision = converters.package_to_revision(package, log=log)
@@ -444,6 +502,15 @@ def flush_revision(storage, partial_result, log=None):
         package['revision'] = revision
 
     storage.revision_add(revisions)
+
+    if log:
+        log.debug("Done sending %d revisions" % num_rev,
+                  extra={
+                      'swh_type': 'storage_send_end',
+                      'swh_content_type': 'revision',
+                      'swh_num': num_rev,
+                      'swh_id': log_id,
+                  })
 
     return packages
 
@@ -458,6 +525,18 @@ def flush_release(storage, packages, log=None):
     Returns:
         The package objects augmented with a release argument
     """
+
+    log_id = uuid.uuid4()
+    num_rel = len(packages)
+    if log:
+        log.debug("Sending %d releases" % num_rel,
+                  extra={
+                      'swh_type': 'storage_send_start',
+                      'swh_content_type': 'release',
+                      'swh_num': num_rel,
+                      'swh_id': log_id,
+                  })
+
     releases = []
     for package in packages:
         release = converters.package_to_release(package)
@@ -465,6 +544,15 @@ def flush_release(storage, packages, log=None):
         package['release'] = release
 
     storage.release_add(releases)
+
+    if log:
+        log.debug("Done sending %d releases" % num_rel,
+                  extra={
+                      'swh_type': 'storage_send_end',
+                      'swh_content_type': 'release',
+                      'swh_num': num_rel,
+                      'swh_id': log_id,
+                  })
 
     return packages
 

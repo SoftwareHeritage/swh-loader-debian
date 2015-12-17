@@ -116,7 +116,8 @@ class LoadSnapshotPackages(Task):
             )
 
             packages = flush_revision(storage, partial, log=self.log)
-            packages_w_revisions = flush_release(storage, packages)
-            flush_occurrences(storage, packages_w_revisions, [swh_authority])
+            packages_w_revs = flush_release(storage, packages, log=self.log)
+            flush_occurrences(storage, packages_w_revs, [swh_authority],
+                              log=self.log)
 
         shutil.rmtree(tmpdir)
