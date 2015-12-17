@@ -276,9 +276,9 @@ class SnapshotDebianOrg:
                          (pkg['name'], pkg['version'], ', '.join(filenames)),
                          extra={
                              'swh_type': 'deb_snapshot_missing_files',
-                             'swh_pkgid': pkg['id'],
-                             'swh_pkgname': pkg['name'],
-                             'swh_pkgver': pkg['version'],
+                             'swh_id': pkg['id'],
+                             'swh_name': pkg['name'],
+                             'swh_version': str(pkg['version']),
                              'swh_missing_files': filenames,
                          })
 
