@@ -387,7 +387,7 @@ def flush_content(storage, partial_result, content_max_length_one, log=None):
     """
     contents = partial_result['objects']['content']
 
-    missing_ids = storage.content_missing(contents.values(),
+    missing_ids = storage.content_missing(list(contents.values()),
                                           key_hash='sha1_git')
 
     if missing_ids:
@@ -411,7 +411,9 @@ def flush_directory(storage, partial_result, log=None):
 
     This function mutates partial_result to empty the directory dict
     """
-    storage.directory_add(partial_result['objects']['directory'].values())
+    directories = partial_result['objects']['directory'].values()
+    storage.directory_add(list(directories))
+
     partial_result['objects']['directory'] = {}
 
 
