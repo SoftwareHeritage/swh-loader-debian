@@ -7,6 +7,7 @@ import glob
 import os
 import shutil
 import tempfile
+import traceback
 
 import dateutil
 
@@ -51,18 +52,20 @@ class LoadSnapshotPackages(Task):
     def run(self, *package_names):
         """Load the history of the given package from snapshot.debian.org"""
 
+        config = self.config
+
         snapshot = SnapshotDebianOrg(
-            connstr=self.config['snapshot_connstr'],
-            basedir=self.config['snapshot_basedir'],
+            connstr=config['snapshot_connstr'],
+            basedir=config['snapshot_basedir'],
         )
 
         storage = get_storage(
-            self.config['storage_class'],
-            self.config['storage_args'],
+            config['storage_class'],
+            config['storage_args'],
         )
 
         swh_authority_dt = open(
-            os.path.join(self.config['snapshot_basedir'], 'TIMESTAMP')
+            os.path.join(config['snapshot_basedir'], 'TIMESTAMP')
         ).read()
 
         swh_authority = {
@@ -80,44 +83,69 @@ class LoadSnapshotPackages(Task):
         )
         origins = snapshot.prepare_origins(package_names, storage)
 
-        sorted_pkgs = []
-        for p in pkgs.values():
-            p['origin_id'] = origins[p['name']]['id']
-            sorted_pkgs.append(p)
+        closed = False
+        fetch_histories = {}
+        for origin in origins.values():
+            id = origin['id']
+            fetch_histories[id] = storage.fetch_history_start(id)
 
-        sorted_pkgs.sort(key=lambda p: (p['name'], p['version']))
+        try:
+            sorted_pkgs = []
+            for p in pkgs.values():
+                p['origin_id'] = origins[p['name']]['id']
+                sorted_pkgs.append(p)
 
-        partial = {}
-        for partial in process_source_packages(
-                sorted_pkgs,
-                self.config['keyrings'],
-                tmpdir,
-                log=self.log,
-        ):
+            sorted_pkgs.sort(key=lambda p: (p['name'], p['version']))
 
-            try_flush_partial(
-                storage, partial,
-                content_packet_size=self.config['content_packet_size'],
-                content_packet_length=self.config['content_packet_length'],
-                content_max_length_one=self.config['content_max_length_one'],
-                directory_packet_size=self.config['directory_packet_size'],
-                log=self.log,
-            )
+            partial = {}
+            for partial in process_source_packages(
+                    sorted_pkgs,
+                    config['keyrings'],
+                    tmpdir,
+                    log=self.log,
+            ):
 
-        if partial:
-            try_flush_partial(
-                storage, partial,
-                content_packet_size=self.config['content_packet_size'],
-                content_packet_length=self.config['content_packet_length'],
-                content_max_length_one=self.config['content_max_length_one'],
-                directory_packet_size=self.config['directory_packet_size'],
-                force=True,
-                log=self.log,
-            )
+                try_flush_partial(
+                    storage, partial,
+                    content_packet_size=config['content_packet_size'],
+                    content_packet_length=config['content_packet_length'],
+                    content_max_length_one=config['content_max_length_one'],
+                    directory_packet_size=config['directory_packet_size'],
+                    log=self.log,
+                )
 
-            packages = flush_revision(storage, partial, log=self.log)
-            packages_w_revs = flush_release(storage, packages, log=self.log)
-            flush_occurrences(storage, packages_w_revs, [swh_authority],
-                              log=self.log)
+            if partial:
+                try_flush_partial(
+                    storage, partial,
+                    content_packet_size=config['content_packet_size'],
+                    content_packet_length=config['content_packet_length'],
+                    content_max_length_one=config['content_max_length_one'],
+                    directory_packet_size=config['directory_packet_size'],
+                    force=True,
+                    log=self.log,
+                )
 
-        shutil.rmtree(tmpdir)
+                packages = flush_revision(storage, partial, log=self.log)
+
+                packages_w_revs = flush_release(
+                    storage,
+                    packages,
+                    log=self.log
+                )
+
+                flush_occurrences(storage, packages_w_revs, [swh_authority],
+                                  log=self.log)
+
+                for fh in fetch_histories.values():
+                    storage.fetch_history_end(fh, {'status': True})
+                closed = True
+        finally:
+            shutil.rmtree(tmpdir)
+            if not closed:
+                data = {
+                    'status': False,
+                    'stderr': traceback.format_exc(),
+                }
+
+                for fh in fetch_histories.values():
+                    storage.fetch_history_end(fh, data)
