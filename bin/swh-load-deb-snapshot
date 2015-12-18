@@ -7,7 +7,7 @@ from swh.loader.debian.tasks import LoadSnapshotPackages
 
 logging.basicConfig(level=logging.DEBUG)
 
-package_names = sys.argv
+package_names = sys.argv[1:]
 
 t = LoadSnapshotPackages()
 

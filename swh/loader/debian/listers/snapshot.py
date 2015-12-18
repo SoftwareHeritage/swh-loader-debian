@@ -8,7 +8,6 @@
 
 from collections import defaultdict
 import os
-import shutil
 
 from deb822 import Dsc
 from debian.debian_support import Version
@@ -105,47 +104,24 @@ class SnapshotDebianOrg:
 
         return ret
 
-    def copy_files_to_dirs(self, files, pool, log=None):
-        """Copy the files from the snapshot storage to the directory
-           `dirname`, via `pool`.
-
-           - Step 1: copy hashed files to pool
-           - Step 2: link hashed files from pool to destdir with the given name
+    def link_files_to_dirs(self, files, log=None):
+        """Symlink the files from the snapshot storage to their destination directory
 
         Args:
             - files: iterable of {hash, name, destdir} dictionaries
-            - pool: the pool directory where hashed files are stored
 
         Raises:
             - FileNotFoundError if a hashed file doesn't exist at the source
 
         """
 
-        hashes = set(file['hash'] for file in files)
-
-        if log:
-            log.debug("%d files to copy" % len(hashes))
-
-        cnt = 0
-        for hash in hashes:
-            dst1 = os.path.join(pool, hash)
-            if not os.path.exists(dst1):
-                src = self._hash_to_path(hash)
-                shutil.copy(src, dst1)
-            cnt += 1
-            if cnt % 100 == 0:
-                if log:
-                    log.debug("%d files copied" % cnt)
-
-        if cnt % 100 != 0:
-            if log:
-                log.debug("%d files copied" % cnt)
-
         for file in files:
-            src1 = os.path.join(pool, file['hash'])
+            src = self._hash_to_path(file['hash'])
             dst = os.path.join(file['destdir'], file['name'])
+            if not os.path.exists(src):
+                raise FileNotFoundError("File %s does not exist" % src)
             if not os.path.exists(dst):
-                os.link(src1, dst)
+                os.symlink(src, dst)
 
     def prepare_origins(self, package_names, storage, log=None):
         """Prepare the origins for the given packages.
@@ -175,12 +151,10 @@ class SnapshotDebianOrg:
     def prepare_packages(self, packages, basedir, log=None):
         """Prepare all the source packages from `packages` for processing.
 
-           Step 1: create a pool as basedir/.pool
-           Step 2: for each version of each package, create a directory
+           Step 1: for each version of each package, create a directory
                    basedir/package_version
-           Step 3: copy all the files for each package version
-                   to basedir/package_version/ using copy_files_to_dirs (and
-                   the previously created pool)
+           Step 2: link all the files for each package version
+                   to basedir/package_version/ using link_files_to_dirs
            Step 4: parse all the dsc files and retrieve the remaining files
 
            Args:
@@ -198,12 +172,26 @@ class SnapshotDebianOrg:
                    dsc: the full path to the package's dsc file.
         """
 
+        length = len(packages)
+        log.info('Preparing %s source package%s from snapshot.debian.org: %s' %
+                 (length, 's' if length else '', ', '.join(packages)),
+                 extra={
+                     'swh_type': 'deb_snapshot_prepare_packages',
+                     'swh_count': length,
+                     'swh_names': packages,
+                 })
+
         src_packages = self.list_package_files(packages)
+        n_packages = len(src_packages)
+
+        log.info('Found %s package version%s on snapshot.debian.org' %
+                 (n_packages, 's' if n_packages else ''),
+                 extra={
+                     'swh_type': 'deb_snapshot_count_package_versions',
+                     'swh_count': length,
+                 })
 
         ret = {}
-
-        pool = os.path.join(basedir, '.pool')
-        os.makedirs(pool, exist_ok=True)
 
         pkgs_with_really_missing_files = defaultdict(list)
 
@@ -232,7 +220,7 @@ class SnapshotDebianOrg:
             ret_pkg['dsc'] = os.path.join(dirname, intended_dsc)
             ret[id] = ret_pkg
 
-        self.copy_files_to_dirs(files, pool, log)
+        self.link_files_to_dirs(files, log)
 
         for id, pkg in ret.items():
             if not os.path.exists(pkg['dsc']):
@@ -266,7 +254,7 @@ class SnapshotDebianOrg:
             missing_file['destdir'] = destdir
             missing_files_to_copy.append(missing_file)
 
-        self.copy_files_to_dirs(missing_files_to_copy, pool, log)
+        self.link_files_to_dirs(missing_files_to_copy, log)
 
         for pkg_id, filenames in pkgs_with_really_missing_files.items():
             pkg = ret[pkg_id]
@@ -276,9 +264,9 @@ class SnapshotDebianOrg:
                          (pkg['name'], pkg['version'], ', '.join(filenames)),
                          extra={
                              'swh_type': 'deb_snapshot_missing_files',
-                             'swh_pkgid': pkg['id'],
-                             'swh_pkgname': pkg['name'],
-                             'swh_pkgver': pkg['version'],
+                             'swh_id': pkg['id'],
+                             'swh_name': pkg['name'],
+                             'swh_version': str(pkg['version']),
                              'swh_missing_files': filenames,
                          })
 
