@@ -11,6 +11,7 @@ Build-Depends: debhelper (>= 9),
                python3-swh.core,
                python3-swh.loader.dir (>= 0.0.15),
                python3-swh.model,
+               python3-swh.scheduler,
                python3-swh.storage (>= 0.0.31),
                python3-vcversioner
 Standards-Version: 3.9.6
