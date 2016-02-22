@@ -401,7 +401,7 @@ def flush_content(storage, partial_result, content_max_length_one, log=None):
         storage.content_missing(list(contents.values()), key_hash='sha1_git')
     )
 
-    log_id = uuid.uuid4()
+    log_id = str(uuid.uuid4())
     num_contents = len(contents)
     num_new_contents = len(missing_ids)
     if log:
@@ -447,7 +447,7 @@ def flush_directory(storage, partial_result, log=None):
     """
     directories = partial_result['objects']['directory'].values()
 
-    log_id = uuid.uuid4()
+    log_id = str(uuid.uuid4())
     num_dir = len(directories)
     if log:
         log.debug("Sending %d directories" % num_dir,
@@ -484,7 +484,7 @@ def flush_revision(storage, partial_result, log=None):
     """
     packages = [package.copy() for package in partial_result['packages']]
 
-    log_id = uuid.uuid4()
+    log_id = str(uuid.uuid4())
     num_rev = len(packages)
     if log:
         log.debug("Sending %d revisions" % num_rev,
@@ -526,7 +526,7 @@ def flush_release(storage, packages, log=None):
         The package objects augmented with a release argument
     """
 
-    log_id = uuid.uuid4()
+    log_id = str(uuid.uuid4())
     num_rel = len(packages)
     if log:
         log.debug("Sending %d releases" % num_rel,

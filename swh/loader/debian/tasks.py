@@ -12,7 +12,7 @@ import traceback
 import dateutil
 
 from swh.core.config import load_named_config
-from swh.core.scheduling import Task
+from swh.scheduler.task import Task
 from swh.storage import get_storage
 
 from .listers.snapshot import SnapshotDebianOrg
