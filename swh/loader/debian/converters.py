@@ -109,8 +109,8 @@ def package_to_revision(package, log=None):
                      (package['name'], package['version']),
                      extra={
                          'swh_type': 'deb_missing_signature',
-                         'swh_packagename': package['name'],
-                         'swh_packagever': package['version'],
+                         'swh_name': package['name'],
+                         'swh_version': str(package['version']),
                      })
         committer_date = metadata['package_info']['changelog']['date']
 
