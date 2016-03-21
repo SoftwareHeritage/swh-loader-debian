@@ -10,8 +10,8 @@ import email.utils
 import os
 
 from swh.model import identifiers
+from swh.model.git import GitType
 from swh.loader.dir.converters import tree_to_directory
-from swh.loader.dir.git import GitType
 
 ROBOT_AUTHOR = {
     'name': b'Software Heritage',

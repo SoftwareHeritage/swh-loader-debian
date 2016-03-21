@@ -2,6 +2,6 @@ python-debian
 vcversioner
 swh.core
 swh.loader.dir >= 0.0.15
-swh.model
+swh.model >= 0.0.4
 swh.scheduler
 swh.storage >= 0.0.31
