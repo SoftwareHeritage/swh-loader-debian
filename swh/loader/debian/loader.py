@@ -16,8 +16,8 @@ from dateutil.parser import parse as parse_date
 from debian.changelog import Changelog
 from debian.deb822 import Dsc
 
-from swh.core import hashutil
-from swh.loader.dir.git import (
+from swh.model import hashutil
+from swh.model.git import (
     walk_and_compute_sha1_from_directory, ROOT_TREE_KEY)
 
 from . import converters
@@ -101,7 +101,7 @@ def get_file_info(filepath):
         'name': name,
     }
 
-    hashes = hashutil.hashfile(filepath)
+    hashes = hashutil.hash_file(filepath)
     for hash in hashes:
         ret[hash] = hashutil.hash_to_hex(hashes[hash])
 
