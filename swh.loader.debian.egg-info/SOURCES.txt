@@ -4,6 +4,7 @@ LICENSE
 MANIFEST.in
 Makefile
 README
+requirements-swh.txt
 requirements.txt
 setup.py
 version.txt
