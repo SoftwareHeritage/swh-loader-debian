@@ -1,3 +1,11 @@
+swh-loader-debian (0.0.5-1~swh1) unstable-swh; urgency=medium
+
+  * Release swh.loader.debian 0.0.5
+  * update to swh.model.hashutil
+  * update tasks to new swh.scheduler API
+
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Mon, 12 Jun 2017 18:07:56 +0200
+
 swh-loader-debian (0.0.4-1~swh1) unstable-swh; urgency=medium
 
   * Release swh.loader.debian version 0.0.4
