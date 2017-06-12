@@ -49,7 +49,7 @@ class LoadSnapshotPackages(Task):
             )
         return self.__config
 
-    def run(self, *package_names):
+    def run_task(self, *package_names):
         """Load the history of the given package from snapshot.debian.org"""
 
         config = self.config
