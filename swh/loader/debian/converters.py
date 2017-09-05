@@ -11,7 +11,7 @@ import os
 
 from swh.model import identifiers
 from swh.model.git import GitType
-from swh.loader.dir.converters import tree_to_directory
+from swh.loader.core.converters import tree_to_directory
 
 ROBOT_AUTHOR = {
     'name': b'Software Heritage',
