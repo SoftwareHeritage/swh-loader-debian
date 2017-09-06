@@ -108,10 +108,10 @@ class SnapshotDebianOrg:
         """Symlink the files from the snapshot storage to their destination directory
 
         Args:
-            - files: iterable of {hash, name, destdir} dictionaries
+            files: iterable of {hash, name, destdir} dictionaries
 
         Raises:
-            - FileNotFoundError if a hashed file doesn't exist at the source
+            FileNotFoundError: if a hashed file doesn't exist at the source
 
         """
 
@@ -131,11 +131,12 @@ class SnapshotDebianOrg:
             storage: an instance of swh.storage.Storage
 
         Returns:
-            a name -> origin dict where origin is itself a dict with the
-            following keys:
-                id: id of the origin
-                type: deb
-                url: the snapshot.debian.org URL for the package
+            dict: a name -> origin dictionary where origin is itself a dict
+            with the following keys:
+
+            - id: id of the origin
+            - type: deb
+            - url: the snapshot.debian.org URL for the package
         """
         ret = {}
         for name in package_names:
@@ -151,25 +152,28 @@ class SnapshotDebianOrg:
     def prepare_packages(self, packages, basedir, log=None):
         """Prepare all the source packages from `packages` for processing.
 
-           Step 1: for each version of each package, create a directory
-                   basedir/package_version
-           Step 2: link all the files for each package version
-                   to basedir/package_version/ using link_files_to_dirs
-           Step 4: parse all the dsc files and retrieve the remaining files
+        - Step 1: for each version of each package, create a directory
+          basedir/package_version
+        - Step 2: link all the files for each package version
+          to basedir/package_version/ using link_files_to_dirs
+        - Step 3: parse all the dsc files and retrieve the remaining files
 
-           Args:
-               packages: a list of source package names
-               basedir: the base directory for file copies
-               log: a logging.Logger object
-           Returns:
-               an id -> source_package mapping, where each source_package is
-               a dict with the following keys:
-                   id: the id of the source package in snapshot.debian.org
-                   name: the source package name
-                   version: the version of the source package
-                   files: a list of the files the source package uses
-                          (with hash and name)
-                   dsc: the full path to the package's dsc file.
+        Args:
+            packages: a list of source package names
+            basedir: the base directory for file copies
+            log: a logging.Logger object
+
+        Returns:
+            dict: an id -> source_package mapping, where each source_package is
+            a dict with the following keys:
+
+            - id: the id of the source package in snapshot.debian.org
+            - name: the source package name
+            - version: the version of the source package
+            - files: a list of the files the source package uses (with hash and
+              name)
+            - dsc: the full path to the package's dsc file.
+
         """
 
         length = len(packages)

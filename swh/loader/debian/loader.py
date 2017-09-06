@@ -86,11 +86,14 @@ def get_file_info(filepath):
 
     Args:
         filepath: the path to the original file
+
     Returns:
-        A dict with the information about the original file:
-            name: the file name
-            sha1, sha1_git, sha256: the hashes for the original file
-            length: the length of the original file
+        dict: information about the original file, in a dictionary with the
+        following keys
+
+        - name: the file name
+        - sha1, sha1_git, sha256: original file hashes
+        - length: original file length
     """
 
     name = os.path.basename(filepath)
@@ -115,11 +118,14 @@ def get_gpg_info_signature(gpg_info):
 
     Args:
         gpg_info: a deb822.GpgInfo object
-    Returns: a dictionary with the following keys:
-        signature_date: a timezone-aware datetime.DateTime object with the date
-                        the signature was made
-        signature_keyid: the keyid of the signing key
-        signature_uid: the uid of the signing key, if found
+
+    Returns:
+        dict: a dictionary with the following keys:
+
+        - signature_date: a timezone-aware datetime.DateTime object with the
+          date the signature was made
+        - signature_keyid: the keyid of the signing key
+        - signature_uid: the uid of the signing key, if found
     """
 
     uid = None
@@ -163,10 +169,12 @@ def get_package_metadata(package, extracted_path, keyrings, log=None):
         keyrings: a list of keyrings to use for gpg actions
         log: a logging.Logger object
 
-    Returns: a dict with the following keys
-        history: list of (package_name, package_version) tuples parsed from
-                 the package changelog
-        source_files: information about all the files in the source package
+    Returns:
+        dict: a dictionary with the following keys:
+
+        - history: list of (package_name, package_version) tuples parsed from
+          the package changelog
+        - source_files: information about all the files in the source package
 
     """
     ret = {}
@@ -255,27 +263,33 @@ def process_source_package(package, keyrings, basedir=None, log=None):
     The source package will be decompressed in a temporary directory.
 
     Args:
-        package: a dict with the following keys:
-            name: source package name
-            version: source package version
-            dsc: the full path of the package's DSC file.
+        package (dict): a dict with the following keys:
+
+            - name: source package name
+            - version: source package version
+            - dsc: the full path of the package's DSC file.
+
         keyrings: a list of keyrings to use for gpg actions
         basedir: the base directory where the package gets extracted
         log: a logging.Logger object
 
     Returns:
-        A tuple with two elements:
-        package: the original package dict augmented with the following keys:
-            metadata: the metadata from get_package_metadata
-            basedir: the temporary directory in which the package was
-                     decompressed
-            directory: the sha1_git of the root directory of the package
-        objects: a dictionary of the parsed directories and files, both indexed
-                 by id
+        tuple: A tuple with two elements:
+
+        - package: the original package dict augmented with the following keys:
+
+            - metadata: the metadata from get_package_metadata
+            - basedir: the temporary directory in which the package was
+              decompressed
+            - directory: the sha1_git of the root directory of the package
+
+        - objects: a dictionary of the parsed directories and files, both
+          indexed by id
 
     Raises:
-        - FileNotFoundError if the dsc file does not exist.
-        - PackageExtractionFailed if the package extraction failed
+        FileNotFoundError: if the dsc file does not exist
+        PackageExtractionFailed: if package extraction failed
+
     """
     if log:
         log.info("Processing package %s_%s" %
@@ -319,14 +333,16 @@ def process_source_packages(packages, keyrings, basedir=None, log=None):
         basedir: the base directory where packages are extracted
         log: a logging.Logger object
 
-    Returns: a generator of partial results.
+    Returns:
+        generator: a generator of partial results.
 
-    Partial results have the following keys:
-        objects: the accumulator for merge_objects. This member can be mutated
-                 to clear the pending contents and directories.
-        tempdirs: the temporary directories processed so far. This list can be
-                  flushed if temporary directories are removed on the fly.
-        packages: the list of packages processed so far.
+        Partial results have the following keys:
+
+        - objects: the accumulator for merge_objects. This member can be
+          mutated to clear the pending contents and directories.
+        - tempdirs: the temporary directories processed so far. This list can
+          be flushed if temporary directories are removed on the fly.
+        - packages: the list of packages processed so far.
 
     """
 
@@ -393,7 +409,8 @@ def flush_content(storage, partial_result, content_max_length_one, log=None):
         content_max_length_one: the maximum length of a persisted content
         log: a logging.Logger object
 
-    This function mutates partial_result to empty the content dict
+    Note:
+        This function mutates partial_result to empty the content dict
     """
     contents = partial_result['objects']['content']
 
@@ -443,7 +460,8 @@ def flush_directory(storage, partial_result, log=None):
         partial_result: a partial result as yielded by process_source_packages
         log: a logging.Logger object
 
-    This function mutates partial_result to empty the directory dict
+    Note:
+        This function mutates partial_result to empty the directory dict
     """
     directories = partial_result['objects']['directory'].values()
 
@@ -479,6 +497,7 @@ def flush_revision(storage, partial_result, log=None):
         storage: an instance of swh.storage.Storage
         partial_result: a partial result as yielded by process_source_packages
         log: a logging.Logger object
+
     Returns:
         The package objects augmented with a revision argument
     """
@@ -522,6 +541,7 @@ def flush_release(storage, packages, log=None):
         storage: an instance of swh.storage.Storage
         packages: a list of packages as returned by flush_revision
         log: a logging.Logger object
+
     Returns:
         The package objects augmented with a release argument
     """
@@ -559,13 +579,16 @@ def flush_release(storage, packages, log=None):
 
 def flush_occurrences(storage, packages, default_occurrences, log=None):
     """Flush the occurrences from a partial_result to storage
+
     Args:
         storage: an instance of swh.storage.Storage
         packages: a list of packages as returned by flush_release
         default_occurrences: a list of occurrences with default values
         log: a logging.Logger object
+
     Returns:
         The written occurrence objects
+
     """
     occurrences = []
 
@@ -604,7 +627,7 @@ def try_flush_partial(storage, partial_result,
         partial_result: a partial result as yielded by process_source_packages
         content_packet_size: the number of contents that triggers a flush
         content_packet_length: the cumulated size of contents that triggers a
-                               flush
+            flush
         content_max_length_one: the maximum length of a persisted content
         directory_packet_size: the number of directories that triggers a flush
         force: force a flush regardless of packet sizes

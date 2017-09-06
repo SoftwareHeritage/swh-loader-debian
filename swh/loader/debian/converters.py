@@ -23,12 +23,13 @@ def blob_to_shallow_content(obj, other_objs):
     """Convert a blob as sent by swh.walker.dir to a blob ready to be sent
     (without contents)
 
-        Args:
-            - obj: The blob object returned by swh.walker.dir
-            - other_objs: unused.
+    Args:
+        obj: The blob object returned by swh.walker.dir
+        other_objs: unused.
 
-        Returns: A "shallow_content": a content, without the data,
-            which saves memory space.
+    Returns:
+        A "shallow_content", i.e., a content, without the data, which saves
+        memory space.
 
     """
     ret = obj.copy()
@@ -42,15 +43,16 @@ def blob_to_shallow_content(obj, other_objs):
 
 
 def shallow_content_to_content(obj, content_max_length_one):
-    """Add the necessary data to the shallow_content created by the
-       previous function
+    """Add the necessary data to the shallow_content created by the previous
+    function
 
-       Args:
-           - obj: shallow_content dict as returned by blob_to_shallow_content
-           - content_max_length_one: length limit of a persisted content
+    Args:
+        obj: shallow_content dict as returned by blob_to_shallow_content
+        content_max_length_one: length limit of a persisted content
 
-       Returns:
-           A content suitable for persistence in swh.storage
+    Returns:
+        A content suitable for persistence in swh.storage
+
     """
 
     content = obj.copy()
@@ -72,11 +74,14 @@ def package_to_revision(package, log=None):
 
     Args:
         package: a dictionary with the following keys:
-            metadata: the metadata for the package, containing
+
+            - metadata: the metadata for the package, containing::
+
                 package_info:
                     changelog
                     pgp_signature
-            directory
+
+            - directory
 
     Returns:
         A revision suitable for persistence in swh.storage
@@ -138,12 +143,15 @@ def package_to_release(package):
 
     Args:
         package: a dictionary with the following keys:
-            metadata: the metadata for the package, containing
-                package_info
-                    changelog
-                        person
-                        date
-            revision
+
+            - metadata: the metadata for the package, containing::
+
+                  package_info
+                      changelog
+                          person
+                          date
+
+            - revision
 
     Returns:
         A revision suitable for persistence in swh.storage
@@ -173,12 +181,13 @@ def dedup_objects(objects, remove_duplicates=True):
     """Deduplicate the objects from dictionary `objects`.
 
     Args:
-        - objects: a dictionary of objects indexed by path
-        - remove_duplicates: if True, remove the duplicate objects
-                             from the filesystem
+        objects: a dictionary of objects indexed by path
+        remove_duplicates: if True, remove the duplicate objects from the
+            filesystem
 
-    Returns: A dictionary, indexed by object type, of dictionaries
-        indexed by object id of deduplicated objects.
+    Returns:
+       dictionary indexed by object type, of dictionaries indexed by
+       object id of deduplicated objects.
 
     """
     converter_map = {
@@ -215,18 +224,22 @@ def merge_objects(accumulator, updates, remove_duplicates=True):
     chunks. "content_seen" and "directory_seen" contain all the ids of
     the objects that have been seen so far.
 
-    - Args:
-          - accumulator: a dict to accumulate several updates in, with keys:
-              - content (dict)
-              - directory (dict)
-              - content_seen (set)
-              - directory_seen (set)
-          - updates: the objects to add to accumulator (has two keys,
-                     content and directory)
-          - remove_duplicates: if True, removes the objects from updates that
-                               have already be seen in accumulator.
+    Args:
+        accumulator (dict): dictionary to accumulate several updates in, with
+            keys:
 
-    - Returns: None (accumulator is mutated).
+            - content (dict)
+            - directory (dict)
+            - content_seen (set)
+            - directory_seen (set)
+
+        updates: the objects to add to accumulator (has two keys, content and
+            directory)
+        remove_duplicates: if True, removes the objects from updates that have
+            already be seen in accumulator.
+
+    Returns:
+        None (accumulator is mutated)
 
     """
 
@@ -250,9 +263,12 @@ def uid_to_person(uid, encode=True):
     Args:
         uid: an uid of the form "Name <email@ddress>"
         encode: whether to convert the output to bytes or not
-    Returns: a dictionary with keys:
-        name: the name associated to the uid
-        email: the mail associated to the uid
+
+    Returns:
+        dict: a dictionary with the following keys:
+
+        - name: the name associated to the uid
+        - email: the mail associated to the uid
     """
 
     ret = {
