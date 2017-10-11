@@ -1,7 +1,7 @@
 python-debian
 swh.core
-swh.loader.dir>=0.0.15
-swh.model>=0.0.4
+swh.loader.core
+swh.model>=0.0.18
 swh.scheduler>=0.0.14
 swh.storage>=0.0.31
 vcversioner
