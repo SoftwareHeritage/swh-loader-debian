@@ -1,9 +1,7 @@
 #!/usr/bin/make -f
 
 export PYBUILD_NAME=swh-loader-debian
+export PYBUILD_TEST_ARGS=--with-doctest -sv -a !db,!fs swh/loader/debian
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
-
-
-override_dh_auto_test:

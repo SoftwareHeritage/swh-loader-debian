@@ -8,13 +8,18 @@ requirements-swh.txt
 requirements.txt
 setup.py
 version.txt
-bin/swh-load-deb-snapshot
 debian/changelog
 debian/compat
 debian/control
 debian/copyright
 debian/rules
 debian/source/format
+docs/.gitignore
+docs/Makefile
+docs/conf.py
+docs/index.rst
+docs/_static/.placeholder
+docs/_templates/.placeholder
 swh.loader.debian.egg-info/PKG-INFO
 swh.loader.debian.egg-info/SOURCES.txt
 swh.loader.debian.egg-info/dependency_links.txt
@@ -24,5 +29,3 @@ swh/loader/debian/__init__.py
 swh/loader/debian/converters.py
 swh/loader/debian/loader.py
 swh/loader/debian/tasks.py
-swh/loader/debian/listers/__init__.py
-swh/loader/debian/listers/snapshot.py
