@@ -1,3 +1,10 @@
+swh-loader-debian (0.0.7-1~swh1) unstable-swh; urgency=medium
+
+  * Release swh.loader.debian version 0.0.7
+  * Update packaging runes
+
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Thu, 12 Oct 2017 19:44:08 +0200
+
 swh-loader-debian (0.0.6-1~swh1) unstable-swh; urgency=medium
 
   * Release swh.loader.debian v0.0.6
