@@ -1,8 +1,9 @@
-swh-loader-debian (0.0.6-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-debian (0.0.7-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * Release swh.loader.debian version 0.0.7
+  * Update packaging runes
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Wed, 11 Oct 2017 18:14:40 +0200
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Thu, 12 Oct 2017 19:44:08 +0200
 
 swh-loader-debian (0.0.6-1~swh1) unstable-swh; urgency=medium
 
