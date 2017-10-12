@@ -20,11 +20,13 @@ docs/conf.py
 docs/index.rst
 docs/_static/.placeholder
 docs/_templates/.placeholder
+swh/__init__.py
 swh.loader.debian.egg-info/PKG-INFO
 swh.loader.debian.egg-info/SOURCES.txt
 swh.loader.debian.egg-info/dependency_links.txt
 swh.loader.debian.egg-info/requires.txt
 swh.loader.debian.egg-info/top_level.txt
+swh/loader/__init__.py
 swh/loader/debian/__init__.py
 swh/loader/debian/converters.py
 swh/loader/debian/loader.py

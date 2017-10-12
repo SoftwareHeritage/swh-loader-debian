@@ -3,5 +3,5 @@ swh.core
 swh.loader.core
 swh.model>=0.0.18
 swh.scheduler>=0.0.14
-swh.storage>=0.0.31
+swh.storage[schemata]
 vcversioner

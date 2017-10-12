@@ -8,11 +8,13 @@ Build-Depends: debhelper (>= 9),
                python3-debian,
                python3-nose,
                python3-setuptools,
+               python3-sqlalchemy,
                python3-swh.core,
                python3-swh.loader.core,
                python3-swh.model (>= 0.0.18),
                python3-swh.scheduler (>= 0.0.14),
                python3-swh.storage (>= 0.0.31),
+               python3-swh.storage.schemata,
                python3-vcversioner
 Standards-Version: 3.9.6
 Homepage: https://forge.softwareheritage.org/diffusion/DLDDEB/
@@ -22,6 +24,7 @@ Architecture: all
 Depends: python3-swh.model (>= 0.0.18),
          python3-swh.scheduler (>= 0.0.14),
          python3-swh.storage (>= 0.0.31),
+         python3-swh.storage.schemata,
          ${misc:Depends},
          ${python3:Depends}
 Description: Software Heritage Debian Loader
