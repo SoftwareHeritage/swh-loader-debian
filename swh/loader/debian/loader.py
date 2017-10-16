@@ -334,6 +334,14 @@ class DebianLoader(SWHLoader):
         branches_revs = {}
         equiv_branch = {}
         for branch, package in packages.items():
+            if 'files' not in package:
+                # already loaded, use default values
+                branches_revs[branch] = identifier_to_bytes(
+                    package['revision_id']
+                )
+                equiv_branch[branch] = branch
+                continue
+
             for eq_branch, files in branches_files.items():
                 if package['files'] == files:
                     equiv_branch[branch] = eq_branch
