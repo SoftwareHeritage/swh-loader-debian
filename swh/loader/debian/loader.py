@@ -22,7 +22,7 @@ from swh.loader.core.loader import SWHLoader
 from swh.storage.schemata.distribution import Package
 from swh.model import hashutil
 from swh.model.from_disk import Directory
-from swh.model.identifiers import identifier_to_bytes
+from swh.model.identifiers import identifier_to_bytes, snapshot_identifier
 
 from . import converters
 
@@ -448,21 +448,22 @@ class DebianLoader(SWHLoader):
 
 
         """
-        occurrences = []
+        branches = {}
         for branch in self.packages:
             rev = self.equivs['revisions'][self.equivs['branches'][branch]]
-            if not rev:
+            if rev:
+                target = {
+                    'type': 'revision',
+                    'target': rev,
+                }
+            else:
                 self.partial = True
-                rev = b'\x00' * 20
+                target = None
 
-            occurrences.append({
-                'target': rev,
-                'target_type': 'revision',
-                'origin': self.origin_id,
-                'visit': self.visit,
-                'branch': branch.encode('utf-8'),
-            })
-        self.maybe_load_occurrences(occurrences)
+            branches[branch.encode('utf-8')] = target
+        snapshot = {'branches': branches}
+        snapshot['id'] = identifier_to_bytes(snapshot_identifier(snapshot))
+        self.maybe_load_snapshot(snapshot)
 
     def load_status(self):
         status = 'eventful' if self.versions_to_load else 'uneventful'

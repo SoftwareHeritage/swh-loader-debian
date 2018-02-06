@@ -1,3 +1,5 @@
+.. _swh-loader-debian:
+
 Software Heritage - Development Documentation
 =============================================
 
