@@ -1,8 +1,9 @@
-swh-loader-debian (0.0.8-1~swh1~bpo9+1) stretch-swh; urgency=medium
+swh-loader-debian (0.0.9-1~swh1) unstable-swh; urgency=medium
 
-  * Rebuild for stretch-backports.
+  * Release swh.loader.debian v0.0.9
+  * Generate snapshots instead of occurrences
 
- -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Fri, 27 Oct 2017 16:47:19 +0200
+ -- Nicolas Dandrimont <nicolas@dandrimont.eu>  Tue, 06 Feb 2018 14:32:06 +0100
 
 swh-loader-debian (0.0.8-1~swh1) unstable-swh; urgency=medium
 
