@@ -453,7 +453,7 @@ class DebianLoader(SWHLoader):
             rev = self.equivs['revisions'][self.equivs['branches'][branch]]
             if rev:
                 target = {
-                    'type': 'revision',
+                    'target_type': 'revision',
                     'target': rev,
                 }
             else:
