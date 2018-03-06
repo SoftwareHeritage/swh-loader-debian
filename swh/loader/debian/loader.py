@@ -1,4 +1,4 @@
-# Copyright (C) 2015  The Software Heritage developers
+# Copyright (C) 2015-2018  The Software Heritage developers
 # See the AUTHORS file at the top-level directory of this distribution
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
@@ -324,8 +324,11 @@ class DebianLoader(SWHLoader):
     def load(self, *, origin, date, packages):
         return super().load(origin=origin, date=date, packages=packages)
 
+    def prepare_origin(self, *args, **kwargs):
+        self.origin = kwargs['origin']
+        return super().prepare_origin(*args, **kwargs)
+
     def prepare(self, *, origin, date, packages):
-        self.origin = origin
         self.visit_date = date
         self.packages = packages
 
