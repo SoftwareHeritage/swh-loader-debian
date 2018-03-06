@@ -481,3 +481,40 @@ class DebianLoader(SWHLoader):
     def cleanup(self):
         for d in self.tempdirs:
             d.cleanup()
+
+
+if __name__ == '__main__':
+    import click
+    import logging
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format='%(asctime)s %(process)d %(message)s'
+    )
+
+    @click.command()
+    @click.option('--origin-url', required=1,
+                  help='Origin url to associate')
+    @click.option('--packages', help='Debian packages to load')
+    @click.option('--visit-date', default=None,
+                  help='Visit date time override')
+    def main(origin_url, packages, visit_date):
+        """Loading debian package tryout."""
+        origin = {'url': origin_url, 'type': 'deb'}
+        if not packages:
+            packages = {
+                "buster/main/3.2.3-1": {
+                    "id": 178584,
+                    "name": "alex",
+                    "version": "3.2.3-1",
+                    "revision_id": "e8b2fe173ab909aa49d40b59292a44c2668e8a26"
+                },
+                "jessie/main/3.1.3-1": {
+                    "id": 230994,
+                    "name": "alex",
+                    "version": "3.1.3-1",
+                    "revision_id": "9a7c853d4cb2521f59108d8d5f21f26a800038ca"
+                },
+            }
+        DebianLoader().load(origin=origin, date=visit_date, packages=packages)
+
+    main()
