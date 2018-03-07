@@ -324,12 +324,11 @@ class DebianLoader(SWHLoader):
     def load(self, *, origin, date, packages):
         return super().load(origin=origin, date=date, packages=packages)
 
-    def prepare_origin(self, *args, **kwargs):
-        self.origin = kwargs['origin']
-        return super().prepare_origin(*args, **kwargs)
+    def prepare_origin_visit(self, *, origin, date, packages):
+        self.origin = origin
+        self.visit_date = date
 
     def prepare(self, *, origin, date, packages):
-        self.visit_date = date
         self.packages = packages
 
         # Deduplicate branches according to equivalent files
@@ -382,9 +381,6 @@ class DebianLoader(SWHLoader):
         self.current_data = {}
         self.tempdirs = []
         self.partial = False
-
-    def get_origin(self):
-        return self.origin
 
     def fetch_data(self):
         if self.done:
