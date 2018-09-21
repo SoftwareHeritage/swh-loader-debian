@@ -1,5 +1,5 @@
 swh.core
 swh.loader.core >= 0.0.32
-swh.model >= 0.0.18
+swh.model >= 0.0.27
 swh.scheduler >= 0.0.14
 swh.storage[schemata]

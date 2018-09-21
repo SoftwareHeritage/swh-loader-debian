@@ -172,18 +172,10 @@ def get_file_info(filepath):
     if isinstance(name, bytes):
         name = name.decode('utf-8')
 
-    ret = {
-        'name': name,
-    }
-
-    hashes = hashutil.hash_path(filepath)
-    for hash in hashes:
-        if hash == 'length':
-            ret[hash] = hashes[hash]
-            continue
-        ret[hash] = hashutil.hash_to_hex(hashes[hash])
-
-    return ret
+    hashes = hashutil.MultiHash.from_path(filepath).hexdigest()
+    hashes['name'] = name
+    hashes['length'] = os.path.getsize(filepath)
+    return hashes
 
 
 def get_package_metadata(package, dsc_path, extracted_path):
