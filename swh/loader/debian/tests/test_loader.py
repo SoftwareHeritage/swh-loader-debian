@@ -3,12 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from nose.plugins.attrib import attr
-from nose.tools import istest
 from unittest import TestCase
 
-from swh.loader.debian.loader import get_file_info
+from nose.plugins.attrib import attr
 
+from swh.loader.debian.loader import get_file_info
 
 RESOURCES_PATH = './swh/loader/debian/tests/resources'
 
@@ -16,8 +15,7 @@ RESOURCES_PATH = './swh/loader/debian/tests/resources'
 @attr('fs')
 class TestFileInfo(TestCase):
 
-    @istest
-    def get_file_info(self):
+    def test_get_file_info(self):
         path = '%s/%s' % (RESOURCES_PATH, 'onefile.txt')
 
         actual_info = get_file_info(path)
