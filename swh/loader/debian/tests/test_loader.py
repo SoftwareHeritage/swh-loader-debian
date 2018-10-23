@@ -29,4 +29,4 @@ class TestFileInfo(TestCase):
             'blake2s256': '4072cf9a0017ad7705a9995bbfbbc098276e6a3afea8d84ab54bff6381c897ab',  # noqa
         }
 
-        self.assertEquals(actual_info, expected_info)
+        self.assertEqual(actual_info, expected_info)
