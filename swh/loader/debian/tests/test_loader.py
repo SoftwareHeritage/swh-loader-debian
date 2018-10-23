@@ -3,16 +3,16 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-from unittest import TestCase
+import pytest
 
-from nose.plugins.attrib import attr
+from unittest import TestCase
 
 from swh.loader.debian.loader import get_file_info
 
 RESOURCES_PATH = './swh/loader/debian/tests/resources'
 
 
-@attr('fs')
+@pytest.mark.fs
 class TestFileInfo(TestCase):
 
     def test_get_file_info(self):
