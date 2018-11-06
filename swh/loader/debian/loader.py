@@ -395,7 +395,7 @@ class DebianLoader(SWHLoader):
 
             self.equivs['revisions'][branch] = revision['id']
 
-        except DebianLoaderException as e:
+        except DebianLoaderException:
             log.exception('Package %s_%s failed to load' %
                           (package['name'], package['version']))
             self.partial = True
