@@ -11,9 +11,10 @@ Loader for `Debian <https://www.debian.org/>`_ source packages.
    :caption: Contents:
 
 
-Indices and tables
-==================
+Reference Documentation
+-----------------------
 
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`
+.. toctree::
+   :maxdepth: 2
+
+   /apidoc/swh.loader.debian
