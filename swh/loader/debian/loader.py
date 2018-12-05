@@ -18,7 +18,7 @@ import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 from swh.storage.schemata.distribution import Package
 from swh.model import hashutil
 from swh.model.from_disk import Directory
@@ -299,7 +299,7 @@ def process_package(package):
     return directory, metadata, tempdir
 
 
-class DebianLoader(SWHLoader):
+class DebianLoader(BufferedLoader):
     """A loader for Debian packages"""
 
     CONFIG_BASE_FILENAME = 'loader/debian'
