@@ -3,15 +3,11 @@
 # License: GNU General Public License version 3, or any later version
 # See top-level LICENSE file for more information
 
-
-from swh.scheduler.task import Task
+from celery import current_app as app
 
 from .loader import DebianLoader
 
 
-class LoadDebianPackage(Task):
-    task_queue = 'swh_loader_debian'
-
-    def run_task(self, *, origin, date, packages):
-        loader = DebianLoader()
-        return loader.load(origin=origin, date=date, packages=packages)
+@app.task(name=__name__ + '.LoadDebianPackage')
+def load_debian_packages(origin, date, packages):
+    return DebianLoader().load(origin=origin, date=date, packages=packages)
