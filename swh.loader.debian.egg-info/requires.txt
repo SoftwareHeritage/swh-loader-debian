@@ -1,7 +1,12 @@
 python-debian
-swh.core
-swh.loader.core>=0.0.32
-swh.model>=0.0.18
-swh.scheduler>=0.0.14
-swh.storage[schemata]
 vcversioner
+swh.core
+swh.loader.core>=0.0.37
+swh.model>=0.0.27
+swh.scheduler>=0.0.39
+swh.storage[schemata]
+
+[testing]
+pytest
+requests-mock
+sqlalchemy

@@ -18,7 +18,7 @@ import requests
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
-from swh.loader.core.loader import SWHLoader
+from swh.loader.core.loader import BufferedLoader
 from swh.storage.schemata.distribution import Package
 from swh.model import hashutil
 from swh.model.from_disk import Directory
@@ -172,18 +172,10 @@ def get_file_info(filepath):
     if isinstance(name, bytes):
         name = name.decode('utf-8')
 
-    ret = {
-        'name': name,
-    }
-
-    hashes = hashutil.hash_path(filepath)
-    for hash in hashes:
-        if hash == 'length':
-            ret[hash] = hashes[hash]
-            continue
-        ret[hash] = hashutil.hash_to_hex(hashes[hash])
-
-    return ret
+    hashes = hashutil.MultiHash.from_path(filepath).hexdigest()
+    hashes['name'] = name
+    hashes['length'] = os.path.getsize(filepath)
+    return hashes
 
 
 def get_package_metadata(package, dsc_path, extracted_path):
@@ -307,7 +299,7 @@ def process_package(package):
     return directory, metadata, tempdir
 
 
-class DebianLoader(SWHLoader):
+class DebianLoader(BufferedLoader):
     """A loader for Debian packages"""
 
     CONFIG_BASE_FILENAME = 'loader/debian'
@@ -403,7 +395,7 @@ class DebianLoader(SWHLoader):
 
             self.equivs['revisions'][branch] = revision['id']
 
-        except DebianLoaderException as e:
+        except DebianLoaderException:
             log.exception('Package %s_%s failed to load' %
                           (package['name'], package['version']))
             self.partial = True
