@@ -1,3 +1,9 @@
+swh-loader-debian (0.0.13-1~swh2~bpo9+1) stretch-swh; urgency=medium
+
+  * Rebuild for stretch-swh
+
+ -- Software Heritage autobuilder (on jenkins-debian1) <jenkins@jenkins-debian1.internal.softwareheritage.org>  Sat, 16 Feb 2019 00:57:38 +0000
+
 swh-loader-debian (0.0.13-1~swh2) unstable-swh; urgency=medium
 
   * New release to fix dependencies
