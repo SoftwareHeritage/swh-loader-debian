@@ -1,3 +1,9 @@
+swh-loader-debian (0.0.13-1~swh2) unstable-swh; urgency=medium
+
+  * New release to fix dependencies
+
+ -- Antoine Romain Dumont <antoine.romain.dumont@gmail.com>  Sat, 16 Feb 2019 01:40:16 +0100
+
 swh-loader-debian (0.0.13-1~swh1) unstable-swh; urgency=medium
 
   * New upstream release 0.0.13     - (tagged by David Douard
