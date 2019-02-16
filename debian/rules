@@ -2,6 +2,7 @@
 
 export PYBUILD_NAME=swh.loader.debian
 export PYBUILD_TEST_ARGS=-v -m "not db and not fs"
+export PGHOST='dummy'
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
