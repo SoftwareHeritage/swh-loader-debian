@@ -1,7 +1,8 @@
 #!/usr/bin/make -f
 
 export PYBUILD_NAME=swh.loader.debian
-export PYBUILD_TEST_ARGS=--with-doctest -sv -a !db,!fs
+export PYBUILD_TEST_ARGS=-v -m "not db and not fs"
+export PGHOST='dummy'
 
 %:
 	dh $@ --with python3 --buildsystem=pybuild
@@ -10,3 +11,6 @@ override_dh_install:
 	dh_install
 	rm -v $(CURDIR)/debian/python3-*/usr/lib/python*/dist-packages/swh/__init__.py
 	rm -v $(CURDIR)/debian/python3-*/usr/lib/python*/dist-packages/swh/loader/__init__.py
+
+override_dh_auto_test:
+	echo "No test"
