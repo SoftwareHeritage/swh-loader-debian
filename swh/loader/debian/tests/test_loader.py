@@ -9,7 +9,7 @@ from unittest import TestCase
 import pytest
 import requests_mock
 
-from swh.core.tests.db_testing import SingleDbTestFixture
+from swh.core.db.tests.db_testing import SingleDbTestFixture
 from swh.model.hashutil import hash_to_bytes
 from swh.storage.schemata.distribution import SQLBase
 from swh.loader.core.tests import BaseLoaderTest

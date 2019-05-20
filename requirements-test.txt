@@ -1,3 +1,4 @@
 pytest
 requests-mock
 sqlalchemy
+swh.core[db,http] >= 0.0.61
