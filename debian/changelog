@@ -1,3 +1,9 @@
+swh-loader-debian (0.0.13-1~swh2~bpo10+1) buster-swh; urgency=medium
+
+  * Rebuild for buster-swh
+
+ -- Nicolas Dandrimont <olasd@debian.org>  Thu, 11 Jul 2019 14:38:22 +0200
+
 swh-loader-debian (0.0.13-1~swh2) unstable-swh; urgency=medium
 
   * New release to fix dependencies
