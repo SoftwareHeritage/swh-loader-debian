@@ -307,6 +307,8 @@ class DebianLoader(BufferedLoader):
         'lister_db_url': ('str', 'postgresql:///lister-debian'),
     }
 
+    visit_type = 'deb'
+
     def __init__(self, config=None):
         super().__init__(logging_class=None, config=config)
         self.db_engine = create_engine(self.config['lister_db_url'])
