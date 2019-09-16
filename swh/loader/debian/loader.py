@@ -482,7 +482,7 @@ if __name__ == '__main__':
     )
 
     @click.command()
-    @click.option('--origin-url', required=1,
+    @click.option('--origin-url', required=True,
                   help='Origin url to associate')
     @click.option('--packages', help='Debian packages to load')
     @click.option('--visit-date', default=None,
