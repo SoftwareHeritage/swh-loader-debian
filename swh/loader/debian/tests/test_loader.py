@@ -99,7 +99,7 @@ class TestDebianLoader(SingleDbTestFixture, BaseLoaderTest):
 
     def _load(self):
         self.loader.load(
-            origin={'url': self.repo_url, 'type': 'deb'},
+            origin=self.repo_url,
             date='2018-12-14 16:45:00+00',
             packages={
                 'stretch/main/2.10-1+deb9u1': {

@@ -319,7 +319,7 @@ class DebianLoader(BufferedLoader):
         return super().load(origin=origin, date=date, packages=packages)
 
     def prepare_origin_visit(self, *, origin, date, packages):
-        self.origin = origin
+        self.origin = {'url': origin, 'type': 'deb'}
         self.visit_date = date
 
     def prepare(self, *, origin, date, packages):
@@ -489,22 +489,39 @@ if __name__ == '__main__':
                   help='Visit date time override')
     def main(origin_url, packages, visit_date):
         """Loading debian package tryout."""
-        origin = {'url': origin_url, 'type': 'deb'}
         if not packages:
             packages = {
-                "buster/main/3.2.3-1": {
-                    "id": 178584,
-                    "name": "alex",
-                    "version": "3.2.3-1",
-                    "revision_id": "e8b2fe173ab909aa49d40b59292a44c2668e8a26"
-                },
-                "jessie/main/3.1.3-1": {
-                    "id": 230994,
-                    "name": "alex",
-                    "version": "3.1.3-1",
-                    "revision_id": "9a7c853d4cb2521f59108d8d5f21f26a800038ca"
-                },
+                'stretch/contrib/0.7.2-3': {
+                    'files': {
+                        'cicero_0.7.2-3.diff.gz': {
+                            'md5sum': 'a93661b6a48db48d59ba7d26796fc9ce',
+                            'name': 'cicero_0.7.2-3.diff.gz',
+                            'sha256': 'f039c9642fe15c75bed5254315e2a29f9f2700da0e29d9b0729b3ffc46c8971c',  # noqa
+                            'size': 3964,
+                            'uri': 'http://deb.debian.org/debian//pool/contrib/c/cicero/cicero_0.7.2-3.diff.gz'  # noqa
+                        },
+                        'cicero_0.7.2-3.dsc': {
+                            'md5sum': 'd5dac83eb9cfc9bb52a15eb618b4670a',
+                            'name': 'cicero_0.7.2-3.dsc',
+                            'sha256': '35b7f1048010c67adfd8d70e4961aefd8800eb9a83a4d1cc68088da0009d9a03',  # noqa
+                            'size': 1864,
+                            'uri': 'http://deb.debian.org/debian//pool/contrib/c/cicero/cicero_0.7.2-3.dsc'},  # noqa
+                        'cicero_0.7.2.orig.tar.gz': {
+                            'md5sum': '4353dede07c5728319ba7f5595a7230a',
+                            'name': 'cicero_0.7.2.orig.tar.gz',
+                            'sha256': '63f40f2436ea9f67b44e2d4bd669dbabe90e2635a204526c20e0b3c8ee957786',  # noqa
+                            'size': 96527,
+                            'uri': 'http://deb.debian.org/debian//pool/contrib/c/cicero/cicero_0.7.2.orig.tar.gz'  # noqa
+                        }
+                    },
+                    'id': 23,
+                    'name': 'cicero',
+                    'revision_id': None,
+                    'version': '0.7.2-3'
+                }
             }
-        DebianLoader().load(origin=origin, date=visit_date, packages=packages)
+
+        DebianLoader().load(origin=origin_url, date=visit_date,
+                            packages=packages)
 
     main()
