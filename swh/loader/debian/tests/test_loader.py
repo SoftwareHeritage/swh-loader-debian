@@ -9,6 +9,8 @@ from unittest import TestCase
 import pytest
 import requests_mock
 
+from typing import Iterable
+
 from swh.core.db.tests.db_testing import SingleDbTestFixture
 from swh.model.hashutil import hash_to_bytes
 from swh.storage.schemata.distribution import SQLBase
@@ -48,7 +50,7 @@ class TestFileInfo(TestCase):
 @pytest.mark.fs
 class TestDebianLoader(SingleDbTestFixture, BaseLoaderTest):
     TEST_DB_NAME = 'test-lister-debian'
-    TEST_DB_DUMP = []
+    TEST_DB_DUMP = []  # type: Iterable[str]
 
     def setUp(self):
         super().setUp(archive_name='',
